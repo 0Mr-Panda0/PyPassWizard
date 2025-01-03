@@ -22,7 +22,7 @@ jobs:
           --health-cmd="mysqladmin ping --silent"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=3
+          --health-retries=10
 
     steps:
       - uses: actions/checkout@v3
@@ -34,8 +34,12 @@ jobs:
         run: make install
       - name: Wait for MySQL
         run: |
-          until mysqladmin ping -h 127.0.0.1 --silent; do
-            echo "Waiting for MySQL..."
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 --silent; then
+              echo "MySQL is up and running"
+              break
+            fi
+            echo "Waiting for MySQL... ($i/30)"
             sleep 5
           done
       - name: Lint code
