@@ -2,16 +2,34 @@
 
 Welcome to the PyPassWizard project! This project is aimed at creating a CLI application for generating password for secure storage.
 
-## Getting Started
+## Setup
 
-To get started with the project, clone the repository and run the `app.py`.
+To set up the project locally, follow these steps:
 
-```sh
-git clone https://github.com/yourusername/PyPassWizard.git
-cd PyPassWizard
-pip install -r requirements.txt
-python app.py
-```
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/your-username/PyPassWizard.git
+    ```
+2. Navigate to the project directory:
+    ```bash
+    cd PyPassWizard
+    ```
+3. Install requirements:
+    ```bash
+    pip install -r requirements.txt 
+    ```
+4. create `.env` file:
+    ```bash
+    HOST_NAME = "<host_name>"
+    PORT = "<port_number>"
+    USER_NAME = "<user_name>"
+    PASSWORD = "<password>"
+    DATABASE_NAME = "<database_name>"
+    ```
+6. Run code:
+    ```bash
+    make all
+    ```
 
 ## Contributing
 
