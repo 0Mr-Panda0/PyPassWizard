@@ -9,7 +9,7 @@ load_dotenv()
 # Configure MySQL connection
 db = mysql.connector.connect(
     host=os.getenv('HOST_NAME'),
-    port=os.getenv('PORT'),
+    port=int(os.getenv("DB_PORT", 3333))
     user=os.getenv('USER_NAME'),
     password=os.getenv('PASSWORD'),
     database=os.getenv('DATABASE_NAME')
