@@ -1,14 +1,31 @@
-from random import choice, randint
+from random import choice
 from string import ascii_letters, digits, punctuation
-from datetime import datetime
+import mysql.connector
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Configure MySQL connection
+db = mysql.connector.connect(
+    host=os.getenv('HOST_NAME'),
+    port=os.getenv('PORT'),
+    user=os.getenv('USER_NAME'),
+    password=os.getenv('PASSWORD'),
+    database=os.getenv('DATABASE_NAME')
+)
+
+def creating_table():
+    cursor = db.cursor()
+    cursor.execute("CREATE TABLE IF NOT EXISTS password (password VARCHAR(255))")
+    cursor.close()
 
 
 def storing_password(password):
-    file_path = "password.txt"
-    with open(file_path, "a+") as note:
-        note.write(
-            f"Password:{password} - length of password:{len(password)} - timestamp:{datetime.now()}\n"
-        )
+    cursor = db.cursor()
+    cursor.execute("INSERT INTO password(password) VALUES(%s)", (password,))
+    db.commit()
+    cursor.close()
 
 
 def creating_password(length_of_password=11, if_special_character_allowed="Yes"):
