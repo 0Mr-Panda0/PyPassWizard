@@ -1,4 +1,5 @@
-from mylib.password_generator import creating_password, storing_password, creating_table
+from mylib.password_generator import creating_password
+from mylib.database_conn import storing_password
 import click
 
 
@@ -23,7 +24,6 @@ def generate(length=11, special_character="Yes", store="Yes"):
     """
     password = creating_password(length, special_character)
     click.echo(f"Your newly generated passoword is : {password}!")
-    creating_table()
     if store == "Yes":
         storing_password(password)
 
