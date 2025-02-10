@@ -3,7 +3,7 @@ from invoke import task
 
 @task
 def install(c):
-    c.run("pip install --upgrade pip")
+    c.run("python -m pip install --upgrade pip")
     c.run("pip install -r requirements.txt")
 
 
