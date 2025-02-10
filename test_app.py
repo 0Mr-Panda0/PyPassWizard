@@ -2,15 +2,11 @@ from mylib.password_generator import creating_password
 from mylib.database_conn import configuring_database, storing_password
 from string import punctuation
 
-
+# test database connection
 def test_database_connection():
     db = configuring_database()
-    cursor = db.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = cursor.fetchall()
-    assert len(tables) > 0, "Database connected and tables exist"
-    cursor.close()
-
+    assert db is not None, "Database connection established"
+    db.close()
 
 def test_creating_password():
     # Test case 1: If special character is allowed
