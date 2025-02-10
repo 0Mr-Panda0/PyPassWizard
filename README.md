@@ -20,11 +20,7 @@ To set up the project locally, follow these steps:
     ```
 4. create `.env` file:
     ```bash
-    HOST_NAME = "<host_name>"
-    PORT = "<port_number>"
-    USER_NAME = "<user_name>"
-    PASSWORD = "<password>"
-    DATABASE_NAME = "<database_name>"
+    DB_PATH="<database_path>"
     ```
 6. Run code:
     ```bash
@@ -48,9 +44,9 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contact
 
-For any questions or suggestions, please open an issue or contact me at [email@example.com](mailto:karan.behera366@gmail.com).
+For any questions or suggestions, please open an issue or contact me at [Karan_Behera](mailto:karan.behera366@gmail.com).
 
 Thank you for contributing to the PyPassWizard project!
 
 
-[![CI Pipeline](https://github.com/0Mr-Panda0/Generate-Password/actions/workflows/main.yml/badge.svg)](https://github.com/0Mr-Panda0/Generate-Password/actions/workflows/main.yml)
+[![CI Pipeline](https://github.com/0Mr-Panda0/PyPassWizard/actions/workflows/main.yml/badge.svg)](https://github.com/0Mr-Panda0/PyPassWizard/actions/workflows/main.yml)
