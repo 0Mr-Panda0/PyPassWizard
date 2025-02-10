@@ -16,17 +16,19 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
+      - name: Install invoke
+        run: pip install invoke
       - name: Install dependencies
-        run: python tasks.py install
+        run: invoke install
       - name: Set up SQLite
         run: |
           sudo apt-get install sqlite3
           sqlite3 --version
       - name: Lint code
-        run: python tasks.py lint
+        run: invoke lint
       - name: Run tests
         env:
           DATABASE_URL: sqlite:///$(pwd)/test.db
-        run: python tasks.py test
+        run: invoke test
       - name: Format code
-        run: python tasks.py format
+        run: invoke format
