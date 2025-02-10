@@ -168,5 +168,5 @@ password.txt
 # Database
 data/
 
-# IDE
+# Visual Studio Code
 .vscode/
