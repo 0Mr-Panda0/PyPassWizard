@@ -9,11 +9,11 @@ def install(c):
 
 @task
 def test(c):
-    c.run("python -m pytest -vv --cov=mylib test_*.py")
+    c.run("python -m pytest -vv --cov=mylib test_app.py")
 
 
 @task
-def format(c):
+def design(c):
     c.run("black *.py")
 
 
@@ -21,12 +21,3 @@ def format(c):
 def lint(c):
     c.run("pylint --disable=R,C --ignore-patterns=test_.*?py *.py")
 
-
-@task(pre=[format, lint])
-def refactor(c):
-    pass
-
-
-@task(pre=[install, lint, test, format])
-def all(c):
-    pass

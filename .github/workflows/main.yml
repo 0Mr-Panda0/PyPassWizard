@@ -31,4 +31,4 @@ jobs:
           DATABASE_URL: sqlite:///$(pwd)/test.db
         run: invoke test
       - name: Format code
-        run: invoke format
+        run: invoke design
