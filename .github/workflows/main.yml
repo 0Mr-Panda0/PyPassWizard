@@ -9,20 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-    services:
-      mysql:
-        image: mysql:5.7
-        ports:
-          - 3333:3306
-        env:
-          MYSQL_ROOT_PASSWORD: root_password
-          MYSQL_DATABASE: Practise
-        options: >-
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
 
     steps:
       - uses: actions/checkout@v3
@@ -31,26 +17,16 @@ jobs:
         with:
           python-version: '3.x'
       - name: Install dependencies
-        run: make install
-      - name: Wait for MySQL
+        run: python tasks.py install
+      - name: Set up SQLite
         run: |
-          for i in {1..30}; do
-            if mysqladmin ping -h 127.0.0.1 --silent; then
-              echo "MySQL is up and running"
-              break
-            fi
-            echo "Waiting for MySQL... ($i/30)"
-            sleep 5
-          done
+          sudo apt-get install sqlite3
+          sqlite3 --version
       - name: Lint code
-        run: make lint
+        run: python tasks.py lint
       - name: Run tests
         env:
-          HOST_NAME: 127.0.0.1
-          PORT: 3333
-          USER_NAME: root
-          PASSWORD: root_password
-          DATABASE_NAME: Practise
-        run: make test
+          DATABASE_URL: sqlite:///$(pwd)/test.db
+        run: python tasks.py test
       - name: Format code
-        run: make format
+        run: python tasks.py format
