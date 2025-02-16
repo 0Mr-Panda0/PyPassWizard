@@ -2,11 +2,13 @@ from mylib.password_generator import creating_password
 from mylib.database_conn import configuring_database, storing_password
 from string import punctuation
 
+
 # test database connection
 def test_database_connection():
     db = configuring_database()
     assert db is not None, "Database connection established"
     db.close()
+
 
 def test_creating_password():
     # Test case 1: If special character is allowed
@@ -39,13 +41,17 @@ def test_creating_password_length():
 def test_creating_password_no_special_characters():
     # Test case: Check if the password contains no special characters when not allowed
     password = creating_password(12, "No")
-    assert all(character.isalnum() for character in password), "Password should not contain special characters"
+    assert all(
+        character.isalnum() for character in password
+    ), "Password should not contain special characters"
 
 
 def test_creating_password_with_special_characters():
     # Test case: Check if the password contains at least one special character when allowed
     password = creating_password(12, "Yes")
-    assert any(character in password for character in punctuation), "Password should contain special characters"
+    assert any(
+        character in password for character in punctuation
+    ), "Password should contain special characters"
 
 
 def test_storing_password_not_stored():

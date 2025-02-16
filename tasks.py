@@ -3,8 +3,7 @@ from invoke import task
 
 @task
 def install(c):
-    c.run("python -m pip install --upgrade pip")
-    c.run("pip install -r requirements.txt")
+    c.run("python -m pip install --upgrade pip && pip install -r requirements.txt")
 
 
 @task
@@ -20,4 +19,3 @@ def design(c):
 @task
 def lint(c):
     c.run("pylint --disable=R,C --ignore-patterns=test_.*?py *.py")
-
