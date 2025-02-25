@@ -20,7 +20,7 @@ def generate(length=11, special_character="Yes", store="Yes"):
                                            Accepts "Yes" or "No". Defaults to "Yes".
         store (str, optional): Whether to store the generated password. Accepts "Yes" or "No". Defaults to "Yes".
     Returns:
-        None
+        str: The generated password.
     """
     password = creating_password(length, special_character)
     click.echo(f"Your newly generated passoword is : {password}!")
