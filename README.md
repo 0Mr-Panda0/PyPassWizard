@@ -16,7 +16,7 @@ To set up the project locally, follow these steps:
     ```
 3. Create a virtual environment:
     ```bash
-    python -m venv .venv
+    python -m venv <virtual_env_name>
     ```
 4. Activating virtual environment:(Windows specific)
     ```bash
