@@ -14,7 +14,15 @@ To set up the project locally, follow these steps:
     ```bash
     cd PyPassWizard
     ```
-3. Install requirements:
+3. Create a virtual environment:
+    ```bash
+    python -m venv .venv
+    ```
+4. Activating virtual environment:(Windows specific)
+    ```bash
+    .\.<virtual_env_name>\Scripts\Activate.ps1
+    ```
+3. Install required modules:
     ```bash
     pip install -r requirements.txt 
     ```
@@ -24,7 +32,7 @@ To set up the project locally, follow these steps:
     ```
 6. Run code:
     ```bash
-    make all
+    invoke build
     ```
 
 ## Contributing

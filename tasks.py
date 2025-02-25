@@ -19,3 +19,8 @@ def design(c):
 @task
 def lint(c):
     c.run("pylint --disable=R,C --ignore-patterns=test_.*?py *.py")
+
+
+@task(pre=[install, lint, design, test])
+def build(c):
+    c.run("echo Build completed.")
