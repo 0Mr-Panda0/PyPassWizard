@@ -22,15 +22,15 @@ To set up the project locally, follow these steps:
     ```bash
     .\.<virtual_env_name>\Scripts\Activate.ps1
     ```
-3. Install required modules:
+5. Install required modules:
     ```bash
     pip install -r requirements.txt 
     ```
-4. create `.env` file:
+6. create `.env` file:
     ```bash
     DB_PATH="<database_path>"
     ```
-6. Run code:
+7. Run code:
     ```bash
     invoke build
     ```
