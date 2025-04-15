@@ -20,17 +20,17 @@ To set up the project locally, follow these steps:
     ```
 4. Activating virtual environment:(Windows specific)
     ```bash
-    .\.<virtual_env_name>\Scripts\Activate.ps1
+    .\<virtual_env_name>\Scripts\Activate.ps1
+    ```
+    Activating virtual environment:(Linux specific)
+     ```bash
+    source <virtual_env_name>/bin/activate
     ```
 5. Install required modules:
     ```bash
     pip install -r requirements.txt 
     ```
-6. create `.env` file:
-    ```bash
-    DB_PATH="<database_path>"
-    ```
-7. Run code:
+6. Run code:
     ```bash
     invoke build
     ```

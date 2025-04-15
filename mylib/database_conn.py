@@ -1,16 +1,13 @@
-from dotenv import load_dotenv
 import sqlite3
 import os
 
-# Load environment variables from .env file
-load_dotenv() 
 
 def configuring_database():
     # Create directory if it doesn't exist
     if not os.path.exists('data'):
         os.makedirs('data')
     # Configure SQLite connection
-    db_path = os.getenv('DB_PATH','data/database.db')
+    db_path = 'data/database.db'
     db = sqlite3.connect(db_path)
     return db
 
