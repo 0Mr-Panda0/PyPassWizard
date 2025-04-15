@@ -12,7 +12,7 @@ required_options = {
 @click.command(context_settings=dict(max_content_width=800))
 @click.option(
     "--l",
-    required=False,
+    required=True,
     type=int,
     default=11,
     help="""\b Password Length (default: 11)""",

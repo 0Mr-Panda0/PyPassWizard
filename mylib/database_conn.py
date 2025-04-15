@@ -6,8 +6,11 @@ import os
 load_dotenv() 
 
 def configuring_database():
+    # Create directory if it doesn't exist
+    if not os.path.exists('data'):
+        os.makedirs('data')
     # Configure SQLite connection
-    db_path = os.getenv('DB_PATH')
+    db_path = os.getenv('DB_PATH','data/database.db')
     db = sqlite3.connect(db_path)
     return db
 

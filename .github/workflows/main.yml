@@ -24,8 +24,6 @@ jobs:
           sqlite3 --version
       - name: Lint code
         run: invoke lint
-      - name: setup database
-        run: invoke setup
       - name: Run tests
         env:
           DATABASE_URL: sqlite:///$(pwd)/data/test.db
