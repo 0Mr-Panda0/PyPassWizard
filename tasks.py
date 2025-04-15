@@ -38,8 +38,3 @@ def lint(c):
 @task(pre=[setup, install, lint, design, test])
 def build(c):
     c.run("echo Build completed.")
-
-
-@task(pre=[build])
-def run(c):
-    c.run("python app.py --help")

@@ -2,29 +2,43 @@ from mylib.password_generator import creating_password
 from mylib.database_conn import storing_password
 import click
 
+required_options = {
+    1: "l",  # password_length
+    2: "sc",  # special_character
+    3: "s",  # store_in_database
+}
 
-@click.command()
-@click.option("--length", default=11, help="password length")
+
+@click.command(context_settings=dict(max_content_width=800))
 @click.option(
-    "--special_character",
-    default="Yes",
-    help="Wether to allow special character 1. Yes 2. No",
+    "--l",
+    required=False,
+    type=int,
+    default=11,
+    help="""\b Password Length (default: 11)""",
 )
-@click.option("--store", default="Yes", help="Wether to store locally 1. Yes 2. No")
-def generate(length=11, special_character="Yes", store="Yes"):
-    """
-    Generates a password based on the given parameters and optionally stores it.
-    Args:
-        length (int, optional): The length of the password to be generated. Defaults to 11.
-        special_character (str, optional): Whether to include special characters in the password.
-                                           Accepts "Yes" or "No". Defaults to "Yes".
-        store (str, optional): Whether to store the generated password. Accepts "Yes" or "No". Defaults to "Yes".
-    Returns:
-        str: The generated password.
-    """
-    password = creating_password(length, special_character)
+@click.option(
+    "--sc",
+    required=False,
+    type=bool,
+    default="Yes",
+    help=f"""\n\b\nAllow Special Character ?:
+1. {click.style("Yes", fg="bright_green")}
+2. {click.style("No", fg="bright_red")}\n""",
+)
+@click.option(
+    "--s",
+    required=False,
+    type=bool,
+    default="Yes",
+    help=f"""\n\b\nStore in Database ?:
+1. {click.style("Yes", fg="bright_green")}
+2. {click.style("No", fg="bright_red")}\n""",
+)
+def generate(l=11, sc="Yes", s="Yes"):
+    password = creating_password(l, sc)
     click.echo(f"Your newly generated passoword is : {password}!")
-    if store == "Yes":
+    if s == "Yes":
         storing_password(password)
 
 

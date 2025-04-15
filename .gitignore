@@ -167,3 +167,6 @@ password.txt
 
 # Database
 data/
+
+# VS Code
+.vscode/
