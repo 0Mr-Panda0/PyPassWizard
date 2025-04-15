@@ -7,7 +7,7 @@ load_dotenv()
 
 def configuring_database():
     # Configure SQLite connection
-    db_path = os.getenv('DB_PATH', 'database.db')
+    db_path = os.getenv('DB_PATH')
     db = sqlite3.connect(db_path)
     return db
 
