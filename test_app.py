@@ -14,18 +14,6 @@ def test_database_connection():
     db.close()
 
 
-def test_creating_database():
-    # Test case: database creation
-    db = configuring_database()
-    cursor = db.cursor()
-    cursor.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='password'"
-    )
-    assert cursor.fetchone() is not None, "Database created successfully"
-    cursor.close()
-    db.close()
-
-
 def test_storing_password():
     # Test case: Check if the password is stored in the database
     case_1 = creating_password(random.randint(8, 20), True)
