@@ -35,7 +35,7 @@ To set up the project locally, follow these steps:
 4. Run the application:
 
     ```bash
-    uv run PyPassWizard.py --help
+    uv run -m src.cli --help
     ```
 
 ## Usage
@@ -47,7 +47,7 @@ Here are some examples of how to use PyPassWizard:
 Generate a random password with a specified length:
 
 ```bash
-uv run PyPassWizard.py generate -l 13 -i yes -c yes -d yes
+uv run -m src.cli generate -l 13 -i yes -c yes -d yes
 ```
 
 ### Store a Password
@@ -55,7 +55,7 @@ uv run PyPassWizard.py generate -l 13 -i yes -c yes -d yes
 Store a password with a name for easy retrieval:
 
 ```bash
-uv run PyPassWizard.py store --name "GitHub" --password "mySecurePassword123!"
+uv run -m src.cli store --name "GitHub" --password "mySecurePassword123!"
 ```
 
 ### Retrieve a Password
@@ -63,7 +63,7 @@ uv run PyPassWizard.py store --name "GitHub" --password "mySecurePassword123!"
 Retrieve a stored password by its name:
 
 ```bash
-uv run PyPassWizard.py retrieve --name "GitHub"
+uv run -m src.cli retrieve --name "GitHub"
 ```
 
 ### Delete a Password
@@ -71,7 +71,7 @@ uv run PyPassWizard.py retrieve --name "GitHub"
 Delete a stored password securely:
 
 ```bash
-uv run PyPassWizard.py delete --name "GitHub"
+uv run -m src.cli delete --name "GitHub"
 ```
 
 ### View Help
@@ -79,7 +79,7 @@ uv run PyPassWizard.py delete --name "GitHub"
 View all available commands and options:
 
 ```bash
-uv run PyPassWizard.py --help
+uv run -m src.cli --help
 ```
 
 ## Contributing
