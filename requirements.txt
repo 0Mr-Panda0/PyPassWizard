@@ -1,7 +1,0 @@
-black
-click
-invoke
-pylint
-pytest
-pytest-cov
-python-dotenv
