@@ -23,7 +23,7 @@ class TestDatabase:
         This fixture creates a new database instance before each test and
         removes the database file after each test.
         """
-        self.db_instance = Database()
+        self.db_instance = Database("data/test.db")
         yield
         self.db_instance.close_connection()
         if os.path.exists(self.db_instance.db_path):
@@ -37,9 +37,9 @@ class TestDatabase:
         Returns:
             funkybob: An instance of funkybob
         """
-    
+
         return funkybob.RandomNameGenerator()
-    
+
     @pytest.fixture
     def pass_gen(self) -> PasswordGenerator:
         """
@@ -74,7 +74,12 @@ class TestDatabase:
         """
         Test if a password can be inserted into the database.
         """
-        test_password = pass_gen.generate_password(random.randint(8,128),include_letters=True,include_special=True,include_digits=True)
+        test_password = pass_gen.generate_password(
+            random.randint(8, 128),
+            include_letters=True,
+            include_special=True,
+            include_digits=True,
+        )
         test_name = next(iter(name_gen))
 
         self.db_instance.inserting_password(test_name, test_password)
@@ -86,16 +91,23 @@ class TestDatabase:
         conn.close()
 
         assert result is not None, "Password should be inserted into the database."
-        assert result[0] == test_password, ("Inserted password should match the test password.")
+        assert result[0] == test_password, (
+            "Inserted password should match the test password."
+        )
 
     def test_retrieve_password(self, pass_gen: PasswordGenerator, name_gen: funkybob):
         """
         Test if the inserted password can be retrieved from the database.
         """
-        test_password = pass_gen.generate_password(random.randint(8,128),include_letters=True,include_special=True,include_digits=True)
+        test_password = pass_gen.generate_password(
+            random.randint(8, 128),
+            include_letters=True,
+            include_special=True,
+            include_digits=True,
+        )
         test_name = next(iter(name_gen))
 
-        self.db_instance.inserting_password(test_name,test_password)
+        self.db_instance.inserting_password(test_name, test_password)
 
         retrieved_password = self.db_instance.retrieve_password_with_name(test_name)
         assert retrieved_password == test_password, (
@@ -107,5 +119,4 @@ class TestDatabase:
         Test if inserting an empty password raises a ValueError.
         """
         with pytest.raises(ValueError, match="Password cannot be empty."):
-            self.db_instance.inserting_password("","")
-
+            self.db_instance.inserting_password("", "")

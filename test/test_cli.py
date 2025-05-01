@@ -30,7 +30,7 @@ class TestCLIApp:
             CLIApp: An instance of the CLI application.
         """
         return CLIApp()
-    
+
     @pytest.fixture
     def name_gen(self) -> funkybob:
         """
@@ -39,9 +39,9 @@ class TestCLIApp:
         Returns:
             funkybob: An instance of funkybob
         """
-    
+
         return funkybob.RandomNameGenerator()
-    
+
     ##---------------------------------------------------------------------------------------- Testing Generate functionality ----------------------------------------------------------------------------------------
 
     def test_generate_password_success(self, runner: CliRunner, cli_app: CLIApp):
@@ -63,13 +63,12 @@ class TestCLIApp:
                 "--include-special",
                 "Yes",
                 "--include-digits",
-                "Yes"
+                "Yes",
             ],
         )
 
         assert result.exit_code == 0
         assert "Generated password:" in result.output
-
 
     def test_generate_password_no_letters(self, runner: CliRunner, cli_app: CLIApp):
         """
@@ -90,15 +89,16 @@ class TestCLIApp:
                 "--include-special",
                 "Yes",
                 "--include-digits",
-                "Yes"
+                "Yes",
             ],
         )
 
         assert result.exit_code == 0
         assert ascii_letters not in result.output.split(":")[1]
 
-
-    def test_generate_password_no_special_characters(self, runner: CliRunner, cli_app: CLIApp):
+    def test_generate_password_no_special_characters(
+        self, runner: CliRunner, cli_app: CLIApp
+    ):
         """
         Test if the Cli app can generate password without special characters.
 
@@ -117,13 +117,12 @@ class TestCLIApp:
                 "--include-special",
                 "No",
                 "--include-digits",
-                "Yes"
+                "Yes",
             ],
         )
 
         assert result.exit_code == 0
         assert punctuation not in result.output.split(":")[1]
-
 
     def test_generate_password_no_digits(self, runner: CliRunner, cli_app: CLIApp):
         """
@@ -144,15 +143,16 @@ class TestCLIApp:
                 "--include-special",
                 "Yes",
                 "--include-digits",
-                "No"
+                "No",
             ],
         )
 
         assert result.exit_code == 0
         assert digits not in result.output.split(":")[1]
 
-
-    def test_generate_password_no_digits_and_no_special_character(self, runner: CliRunner, cli_app: CLIApp):
+    def test_generate_password_no_digits_and_no_special_character(
+        self, runner: CliRunner, cli_app: CLIApp
+    ):
         """
         Test if the Cli app can generate password without special characters or numericals.
 
@@ -171,7 +171,7 @@ class TestCLIApp:
                 "--include-special",
                 "No",
                 "--include-digits",
-                "No"
+                "No",
             ],
         )
 
@@ -179,7 +179,9 @@ class TestCLIApp:
         assert digits not in result.output.split(":")[1]
         assert punctuation not in result.output.split(":")[1]
 
-    def test_generate_password_no_digits_and_no_letters(self, runner: CliRunner, cli_app: CLIApp):
+    def test_generate_password_no_digits_and_no_letters(
+        self, runner: CliRunner, cli_app: CLIApp
+    ):
         """
         Test if the Cli app can generate password without alphabets or numericals.
 
@@ -198,7 +200,7 @@ class TestCLIApp:
                 "--include-special",
                 "Yes",
                 "--include-digits",
-                "No"
+                "No",
             ],
         )
 
@@ -206,7 +208,9 @@ class TestCLIApp:
         assert digits not in result.output.split(":")[1]
         assert ascii_letters not in result.output.split(":")[1]
 
-    def test_generate_password_no_letters_and_no_special_character(self, runner: CliRunner, cli_app: CLIApp):
+    def test_generate_password_no_letters_and_no_special_character(
+        self, runner: CliRunner, cli_app: CLIApp
+    ):
         """
         Test if the Cli app can generate password without special characters or digits.
 
@@ -225,7 +229,7 @@ class TestCLIApp:
                 "--include-special",
                 "No",
                 "--include-digits",
-                "Yes"
+                "Yes",
             ],
         )
 
@@ -233,8 +237,9 @@ class TestCLIApp:
         assert ascii_letters not in result.output.split(":")[1]
         assert punctuation not in result.output.split(":")[1]
 
-
-    def test_generate_password_with_alternate_tags(self, runner: CliRunner, cli_app: CLIApp):
+    def test_generate_password_with_alternate_tags(
+        self, runner: CliRunner, cli_app: CLIApp
+    ):
         """
         Test if the Cli app can generate password without special characters or digits.
 
@@ -253,14 +258,16 @@ class TestCLIApp:
                 "-i",
                 "Yes",
                 "-d",
-                "Yes"
+                "Yes",
             ],
         )
 
         assert result.exit_code == 0
         assert "Generated password:" in result.output
 
-    def test_generate_password_invalid_special_flag(self, runner: CliRunner, cli_app: CLIApp):
+    def test_generate_password_invalid_special_flag(
+        self, runner: CliRunner, cli_app: CLIApp
+    ):
         """
         Test the password generation functionality of the CLI with an invalid special flag.
 
@@ -273,14 +280,12 @@ class TestCLIApp:
             [
                 "generate",
                 "--length",
-                "12",
+                f"{random.randint(8, 128)}",
                 "-include-letter",
-                "Yes"
+                "Yes",
                 "--include-special",
                 "Invalid",  # Invalid value
                 "--include-digits",
-                "Yes",
-                "--store",
                 "Yes",
             ],
         )
@@ -288,8 +293,10 @@ class TestCLIApp:
         assert result.exit_code != 0
         assert "Invalid value for '--include-special'" in result.output
 
-##---------------------------------------------------------------------------------------- Testing Store functionality ----------------------------------------------------------------------------------------
-    def test_store_password_with_tags(self,runner: CliRunner,cli_app: CLIApp, name_gen: funkybob) -> None:
+    ##---------------------------------------------------------------------------------------- Testing Store functionality ----------------------------------------------------------------------------------------
+    def test_store_password_with_tags(
+        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob
+    ) -> None:
         """
         Test the storage functionality of the CLI
 
@@ -305,12 +312,12 @@ class TestCLIApp:
                 "generate",
                 "-l",
                 f"{random.randint(8, 128)}",
-                "--i",
+                "-c",
                 "Yes",
-                "--i",
+                "-i",
                 "Yes",
-                "--i",
-                "Yes"
+                "-d",
+                "Yes",
             ],
         )
 
@@ -325,10 +332,21 @@ class TestCLIApp:
             ],
         )
 
+        runner.invoke(
+            cli_app.get_command(),
+            [
+                "delete",
+                "-n",
+                f"{name}",
+            ],
+        )
+
         assert result.exit_code == 0
         assert result.output == "Password sucessfully stored in the database.\n"
 
-    def test_store_password(self,runner: CliRunner,cli_app: CLIApp, name_gen: funkybob) -> None:
+    def test_store_password(
+        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob
+    ) -> None:
         """
         Test the storage functionality of the CLI
 
@@ -344,12 +362,12 @@ class TestCLIApp:
                 "generate",
                 "-l",
                 f"{random.randint(8, 128)}",
-                "--i",
+                "--include-letters",
                 "Yes",
-                "--i",
+                "--include-special",
                 "Yes",
-                "--i",
-                "Yes"
+                "-include-digits",
+                "Yes",
             ],
         )
 
@@ -364,12 +382,23 @@ class TestCLIApp:
             ],
         )
 
+        runner.invoke(
+            cli_app.get_command(),
+            [
+                "delete",
+                "-n",
+                f"{name}",
+            ],
+        )
+
         assert result.exit_code == 0
         assert result.output == "Password sucessfully stored in the database.\n"
 
-##---------------------------------------------------------------------------------------- Testing Delete functionality ------------------------------------------------------------------------------------------
+    ##---------------------------------------------------------------------------------------- Testing Delete functionality ------------------------------------------------------------------------------------------
 
-    def test_delete_password(self,runner: CliRunner,cli_app: CLIApp, name_gen: funkybob) -> None:
+    def test_delete_password(
+        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob
+    ) -> None:
         """
         Test the delete functionality of the CLI
 
@@ -385,12 +414,12 @@ class TestCLIApp:
                 "generate",
                 "-l",
                 f"{random.randint(8, 128)}",
-                "--i",
+                "--c",
                 "Yes",
                 "--i",
                 "Yes",
-                "--i",
-                "Yes"
+                "--d",
+                "Yes",
             ],
         )
 
@@ -413,14 +442,15 @@ class TestCLIApp:
                 f"{name}",
             ],
         )
-        
 
         assert result.exit_code == 0
-        assert result.output == f"Password with name: {name} sucessfully deleted.\n"        
+        assert result.output == f"Password with name: {name} sucessfully deleted.\n"
 
-##---------------------------------------------------------------------------------------- Testing Retrieve functionality -------------------------------------------------------------------------------------------
+    ##---------------------------------------------------------------------------------------- Testing Retrieve functionality -------------------------------------------------------------------------------------------
 
-    def test_retrieve_password(self,runner: CliRunner,cli_app: CLIApp, name_gen: funkybob) -> None:
+    def test_retrieve_password(
+        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob
+    ) -> None:
         """
         Test the storage functionality of the CLI
 
@@ -436,12 +466,12 @@ class TestCLIApp:
                 "generate",
                 "-l",
                 f"{random.randint(8, 128)}",
-                "--i",
+                "--c",
                 "Yes",
                 "--i",
                 "Yes",
-                "--i",
-                "Yes"
+                "--d",
+                "Yes",
             ],
         )
 
@@ -460,6 +490,15 @@ class TestCLIApp:
             cli_app.get_command(),
             [
                 "retrieve",
+                "--name",
+                f"{name}",
+            ],
+        )
+
+        runner.invoke(
+            cli_app.get_command(),
+            [
+                "delete",
                 "--name",
                 f"{name}",
             ],

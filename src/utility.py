@@ -12,11 +12,14 @@ class Database:
     Database class for managing password storage and retrieval.
     """
 
-    def __init__(self):
+    def __init__(self, path: str):
         """
-        Initializes the Database class, sets up the database path,
+        Initializes the Database class, sets up the database path.
+
+        Args:
+            path (str): path to the database.
         """
-        self.db_path = os.path.abspath("data/database.db")
+        self.db_path = os.path.abspath(path)
         self.db = self.configuring_database()
         self.creating_table()
 

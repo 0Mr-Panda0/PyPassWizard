@@ -2,6 +2,7 @@
 This module provides a command line interface (CLI) for generating passwords.
 """
 
+import os
 import click
 import logging
 import funkybob  # type: ignore
@@ -20,7 +21,7 @@ class CLIApp:
         This method sets up the PasswordGenerator, Database and funkybob instances.
         """
         self.password_generator = PasswordGenerator()
-        self.database = Database()
+        self.database = Database("data/database.db")
         self.names_generator = funkybob.RandomNameGenerator()
 
     def password_generate(
@@ -85,7 +86,7 @@ class CLIApp:
         """
         try:
             self.database.inserting_password(name, password)
-            click.secho("Password sucessfully stored in the database.",fg="green")
+            click.secho("Password sucessfully stored in the database.", fg="green")
         except Exception as e:
             logging.error(f"Error storing password: {e}")
             click.secho(f"An error occurred: {e}", fg="red")
@@ -280,3 +281,31 @@ class CLIApp:
             self.delete_password(name)
 
         return cli_group
+
+
+def main() -> None:
+    """
+    Main function to run the CLI application.
+    This function sets up the logging configuration and initializes the CLI application.
+    """
+    # Ensure the logs directory exists
+    logs_dir = os.path.join(os.path.dirname(__file__), "../log")
+    os.makedirs(logs_dir, exist_ok=True)
+
+    # Configure logging to write only to a file
+    log_file = os.path.join(logs_dir, "app.log")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler(log_file)  # Log only to the file
+        ],
+    )
+
+    cli = CLIApp()
+    cli_command = cli.get_command()
+    cli_command()
+
+
+if __name__ == "__main__":
+    main()

@@ -58,7 +58,9 @@ class TestPasswordGenerator:
         """
         Test password generation without special characters.
         """
-        password = self.generator.generate_password(10, include_letters=True, include_special=False, include_digits=True)
+        password = self.generator.generate_password(
+            10, include_letters=True, include_special=False, include_digits=True
+        )
         assert len(password) == 10
         assert any(char.isalpha() for char in password)
         assert any(char.isdigit() for char in password)
@@ -68,7 +70,9 @@ class TestPasswordGenerator:
         """
         Test password generation without digits.
         """
-        password = self.generator.generate_password(10, include_letters=True, include_special=True, include_digits=False)
+        password = self.generator.generate_password(
+            10, include_letters=True, include_special=True, include_digits=False
+        )
         assert len(password) == 10
         assert any(char.isalpha() for char in password)
         assert not any(char.isdigit() for char in password)
@@ -78,7 +82,9 @@ class TestPasswordGenerator:
         """
         Test password generation without letters.
         """
-        password = self.generator.generate_password(10, include_letters=False,include_special=True, include_digits=True)
+        password = self.generator.generate_password(
+            10, include_letters=False, include_special=True, include_digits=True
+        )
         assert len(password) == 10
         assert not any(char.isalpha() for char in password)
         assert any(char.isdigit() for char in password)

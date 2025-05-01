@@ -1,14 +1,50 @@
-# Virtual Environments\
-.venv
+# Byte-compiled and cached files
+__pycache__/
+*.py[cod]
 
-# Database
-data
+# Virtual environment directories
+env/
+venv/
+.venv/
 
-# Caching
-__pycache__
+# System files
+.DS_Store
+Thumbs.db
 
-# Testing
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.swp
+
+# Build artifacts
+build/
+dist/
+*.egg-info
+
+# Testing artifacts
 .coverage
+pytest_cache/
+.cache/
+htmlcov/
 
-# Logging
-log
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Configuration for development
+.env
+*.local
+
+# Wheel files
+*.whl
+
+# Package management cache
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Specific to your CLI app (e.g., SQLite database files or extra configuration)
+*.db
+*.config
