@@ -32,10 +32,16 @@ To set up the project locally, follow these steps:
     uv sync
     ```
 
-4. Run the application:
+4. Run the application: or
 
     ```bash
     uv run -m src.cli --help
+    ```
+
+5. Download from pip:
+
+    ```bash
+    pip install pypasswizard
     ```
 
 ## Usage
@@ -47,7 +53,7 @@ Here are some examples of how to use PyPassWizard:
 Generate a random password with a specified length:
 
 ```bash
-uv run -m src.cli generate -l 13 -i yes -c yes -d yes
+pypasswizard generate -l 13 -i yes -c yes -d yes
 ```
 
 ### Store a Password
@@ -55,7 +61,7 @@ uv run -m src.cli generate -l 13 -i yes -c yes -d yes
 Store a password with a name for easy retrieval:
 
 ```bash
-uv run -m src.cli store --name "GitHub" --password "mySecurePassword123!"
+pypasswizard store --name "GitHub" --password "mySecurePassword123!"
 ```
 
 ### Retrieve a Password
@@ -63,7 +69,7 @@ uv run -m src.cli store --name "GitHub" --password "mySecurePassword123!"
 Retrieve a stored password by its name:
 
 ```bash
-uv run -m src.cli retrieve --name "GitHub"
+pypasswizard retrieve --name "GitHub"
 ```
 
 ### Delete a Password
@@ -71,7 +77,7 @@ uv run -m src.cli retrieve --name "GitHub"
 Delete a stored password securely:
 
 ```bash
-uv run -m src.cli delete --name "GitHub"
+pypasswizard delete --name "GitHub"
 ```
 
 ### View Help
@@ -79,7 +85,7 @@ uv run -m src.cli delete --name "GitHub"
 View all available commands and options:
 
 ```bash
-uv run -m src.cli --help
+pypasswizard --help
 ```
 
 ## Contributing
@@ -109,6 +115,12 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Contact
 
 For any questions or suggestions, please open an issue or contact me at [Karan Behera](mailto:karan.behera366@gmail.com).
+
+## Acknowledgements
+
+1. [uv](https://github.com/astral-sh/uv)
+2. [ruff](https://github.com/astral-sh/ruff)
+3. [mypy](https://github.com/python/mypy)
 
 Thank you for using PyPassWizard!
 
