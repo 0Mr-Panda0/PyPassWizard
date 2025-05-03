@@ -3,7 +3,7 @@ import os
 
 setup(
     name="PyPassWizard",
-    version="0.1.0",
+    version="0.2.0",
     author="0Mr-Panda0",
     author_email="karan.behera366@example.com",
     description="A CLI application for managing passwords securely.",
