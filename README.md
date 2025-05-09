@@ -80,6 +80,16 @@ Delete a stored password securely:
 pypasswizard delete --name "GitHub"
 ```
 
+### Export Passwords
+
+Export stored passwords:
+
+```bash
+pypasswizard export --name "output" --format xlsx --location passwords
+```
+
+Note: Current supported formats csv, xlsx, parquet, json, md
+
 ### View Help
 
 View all available commands and options:

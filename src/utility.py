@@ -5,6 +5,8 @@ This module provides a database class for handling password storage and retrieva
 import sqlite3
 import os
 import logging
+import pandas as pd  # type: ignore
+from pandera.typing import DataFrame
 
 
 class Database:
@@ -128,6 +130,27 @@ class Database:
             logging.info(f"Password associated with name: {name} has been deleted!")
         except sqlite3.Error as e:
             logging.error(f"Failed to insert password: {e}")
+            raise
+
+    def show_all_passwords(self) -> DataFrame:
+        """
+        Return all the stored password.
+        """
+        try:
+            cursor = self.db.cursor()
+            cursor.execute("SELECT name,password FROM password")
+            data = cursor.fetchall()
+            column_names = [description[0] for description in cursor.description]
+            df = pd.DataFrame(data, columns=column_names)
+            cursor.close()
+            if df is not None:
+                logging.info("Table data retrieved sucessfully.")
+                return df
+            else:
+                logging.warning("There is no password table.")
+                raise ValueError("UNable to feth password table data")
+        except sqlite3.Error as e:
+            logging.error(f"Failed to retrieve passwords: {e}")
             raise
 
     def close_connection(self) -> None:

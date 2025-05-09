@@ -8,6 +8,7 @@ import logging
 import funkybob  # type: ignore
 from src.core import PasswordGenerator
 from src.utility import Database
+from pandera.typing import DataFrame
 
 
 class CLIApp:
@@ -16,12 +17,15 @@ class CLIApp:
     store them in a database, and retrieve the stored password associated with a name and delete a password associated with a name.
     """
 
-    def __init__(self):
+    def __init__(self, path: str):
         """
         This method sets up the PasswordGenerator, Database and funkybob instances.
+
+        Args:
+            path (str): path to Database
         """
         self.password_generator = PasswordGenerator()
-        self.database = Database("data/database.db")
+        self.database = Database(path)
         self.names_generator = funkybob.RandomNameGenerator()
 
     def password_generate(
@@ -69,7 +73,7 @@ class CLIApp:
         try:
             password = self.database.retrieve_password_with_name(name)
             if password:
-                click.secho(f"name: {name} password: {password}", fg="blue", bold=True)
+                click.secho(f"name: {name} password: {password}.", fg="blue", bold=True)
             else:
                 click.secho("No passwords found in the database.", fg="yellow")
         except Exception as e:
@@ -133,6 +137,74 @@ class CLIApp:
             include_special_bool,
             include_digits_bool,
             store_bool,
+        )
+
+    def save_to_file(
+        self,
+        file_location: str,
+        file_name: str,
+        format: str,
+        location_styled: str,
+        file_name_styled: str,
+        data: DataFrame,
+    ):
+        """Save files in specific formats
+
+        Args:
+            file_location (str): location of files.
+            file_name (str): name of file.
+            format (str): formmat of file.
+            location_styled (str): styled file location.
+            file_name_styled (str): styled file name.
+            data (DataFrame): data in dataframe format.
+        """
+
+        try:
+            if format == "csv":
+                data.to_csv(f"{file_location}/{file_name}", index=False)
+            if format == "xlsx":
+                data.to_excel(f"{file_location}/{file_name}", index=False)
+            if format == "md":
+                data.to_markdown(f"{file_location}/{file_name}", index=False)
+            if format == "parquet":
+                data.to_parquet(f"{file_location}/{file_name}", index=False)
+            if format == "json":
+                data.to_json(f"{file_location}/{file_name}", index=False)
+            logging.info(
+                f"Passwords saved in location {file_location} inside {file_name}"
+            )
+            click.secho(
+                f"Passwords saved in location {location_styled} inside {file_name_styled}.",
+                fg="green",
+            )
+        except Exception as e:
+            logging.error(f"Error occured while saving exporting : {e}")
+            click.secho(f"Error occured while saving exporting : {e}", fg="red")
+
+    def export_password(self, name: str, format: str, location: str):
+        """
+        Exporting Password in specified format and location.
+
+        Args:
+            name (str): name of the output file.
+            format (str): format you want your passwords in.
+            location (str): location of the password.
+        """
+        file_name = f"{name}.{format}"
+        file_location = os.path.abspath(location)
+
+        try:
+            if not os.path.exists(file_location):
+                os.makedirs(file_location)
+                logging.info(f"Created directory: {file_location}")
+        except Exception as e:
+            logging.error(f"Error in creating the location directory: {e}")
+
+        data = self.database.show_all_passwords()
+        location_styled = click.style(f"{file_location}", fg="blue")
+        file_name_styled = click.style(f"{file_name}", fg="blue")
+        self.save_to_file(
+            file_location, file_name, format, location_styled, file_name_styled, data
         )
 
     def get_command(self) -> click.Group:
@@ -280,6 +352,38 @@ class CLIApp:
             """
             self.delete_password(name)
 
+        @cli_group.command()
+        @click.option(
+            "--name",
+            "-n",
+            required=True,
+            prompt="Enter the name of the file you want to export your passwords in.",
+            help="Exporting all your passwords using this file name.",
+        )
+        @click.option(
+            "--format",
+            "-f",
+            required=True,
+            prompt="Enter the format you want to export your passwords in.",
+            help="Exporting all your stored passwords in specifiec format.",
+        )
+        @click.option(
+            "--location",
+            "-l",
+            required=True,
+            prompt="Enter the location you want to export your passwords in.",
+            help="Exporting all your stored passwords in specifiec location.",
+        )
+        def export(name: str, format: str, location: str):
+            """Exporting stored password in specified password.
+
+            Args:
+                name (str): namr of the file.
+                format (str): format you want your password in.
+                location (str): location of the export file.
+            """
+            self.export_password(name, format, location)
+
         return cli_group
 
 
@@ -302,7 +406,7 @@ def main() -> None:
         ],
     )
 
-    cli = CLIApp()
+    cli = CLIApp("data/database.db")
     cli_command = cli.get_command()
     cli_command()
 
