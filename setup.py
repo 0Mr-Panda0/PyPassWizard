@@ -1,9 +1,12 @@
 from setuptools import setup, find_packages  # type: ignore
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 setup(
     name="PyPassWizard",
-    version="0.3.0",
+    version=str(os.getenv("VERSION")),
     author="0Mr-Panda0",
     author_email="karan.behera366@gmail.com",
     description="A CLI application for managing passwords securely.",

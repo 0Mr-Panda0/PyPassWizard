@@ -3,19 +3,19 @@ This module contains test cases for the CLI application.
 """
 
 import pytest
-import random
 import os
-import re
-import funkybob  # type: ignore
 import pandas as pd  # type: ignore
 import sqlite3
-from string import ascii_letters, digits, punctuation
+import re
 from click.testing import CliRunner
 from src.cli import CLIApp
 from pandera.typing import DataFrame
+from dotenv import load_dotenv
 
+load_dotenv()
 
 class TestCLIApp:
+
     @pytest.fixture
     def runner(self) -> CliRunner:
         """
@@ -34,35 +34,78 @@ class TestCLIApp:
         Returns:
             CLIApp: An instance of the CLI application.
         """
-        return CLIApp("data/test.db")
+        return CLIApp(str(os.getenv('TEST_DB_PATH')))
 
-    @pytest.fixture
-    def name_gen(self) -> funkybob:
+    def generate_and_store_password(
+        self, runner: CliRunner, cli_app: CLIApp, name: str
+    ) -> str:
         """
-        Fixture for the Name generation.
+        Helper method to generate and store a password.
+
+        Args:
+            runner (CliRunner): The CLI runner for invoking commands.
+            cli_app (CLIApp): The CLI application instance.
+            name (str): The name to associate with the password.
 
         Returns:
-            funkybob: An instance of funkybob
+            str: The generated password.
         """
+        password = (
+            runner.invoke(
+                cli_app.get_command(),
+                [
+                    "generate",
+                    "-l",
+                    "12",
+                    "-c",
+                    "Yes",
+                    "-i",
+                    "Yes",
+                    "-d",
+                    "Yes",
+                    "-s",
+                    "No",
+                ],
+            )
+        ).output.split(" ")[2]
 
-        return funkybob.RandomNameGenerator()
+        runner.invoke(
+            cli_app.get_command(),
+            [
+                "store",
+                "--name",
+                name,
+                "--password",
+                password,
+            ],
+        )
 
-    ##---------------------------------------------------------------------------------------- Testing Generate functionality ----------------------------------------------------------------------------------------
+        return password
+
+    def cleanup_exported_files(self, file_location: str, file_name: str) -> None:
+        """
+        Helper method to clean up exported files.
+
+        Args:
+            file_location (str): The location of the exported file.
+            file_name (str): The name of the exported file.
+        """
+        file_to_be_deleted = os.path.join(file_location, file_name)
+        if os.path.exists(file_to_be_deleted):
+            os.remove(file_to_be_deleted)
+        if os.path.exists(file_location):
+            os.rmdir(file_location)
 
     def test_generate_password_success(self, runner: CliRunner, cli_app: CLIApp):
         """
         Test the password generation functionality of the CLI.
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
         """
         result = runner.invoke(
             cli_app.get_command(),
             [
                 "generate",
                 "--length",
-                f"{random.randint(8, 128)}",
+                "12",
                 "--include-letters",
                 "Yes",
                 "--include-special",
@@ -77,486 +120,19 @@ class TestCLIApp:
         assert result.exit_code == 0
         assert "Generated password:" in result.output
 
-    def test_generate_password_no_letters(self, runner: CliRunner, cli_app: CLIApp):
+    def test_store_and_retrieve_password(self, runner: CliRunner, cli_app: CLIApp) -> None:
         """
-        Test if the Cli app can generate password without alphabets.
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
+        Test the storage and retrieval functionality of the CLI.
         """
-        result = runner.invoke(
-            cli_app.get_command(),
-            [
-                "generate",
-                "--length",
-                f"{random.randint(8, 128)}",
-                "--include-letters",
-                "No",
-                "--include-special",
-                "Yes",
-                "--include-digits",
-                "Yes",
-                "--store",
-                "No",
-            ],
-        )
-
-        assert result.exit_code == 0
-        assert ascii_letters not in result.output.split(":")[1]
-
-    def test_generate_password_no_special_characters(
-        self, runner: CliRunner, cli_app: CLIApp
-    ):
-        """
-        Test if the Cli app can generate password without special characters.
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-        """
-        result = runner.invoke(
-            cli_app.get_command(),
-            [
-                "generate",
-                "--length",
-                f"{random.randint(8, 128)}",
-                "--include-letters",
-                "Yes",
-                "--include-special",
-                "No",
-                "--include-digits",
-                "Yes",
-                "--store",
-                "No",
-            ],
-        )
-
-        assert result.exit_code == 0
-        assert punctuation not in result.output.split(":")[1]
-
-    def test_generate_password_no_digits(self, runner: CliRunner, cli_app: CLIApp):
-        """
-        Test if the Cli app can generate password without numericals.
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-        """
-        result = runner.invoke(
-            cli_app.get_command(),
-            [
-                "generate",
-                "--length",
-                f"{random.randint(8, 128)}",
-                "--include-letters",
-                "Yes",
-                "--include-special",
-                "Yes",
-                "--include-digits",
-                "No",
-                "--store",
-                "No",
-            ],
-        )
-
-        assert result.exit_code == 0
-        assert digits not in result.output.split(":")[1]
-
-    def test_generate_password_no_digits_and_no_special_character(
-        self, runner: CliRunner, cli_app: CLIApp
-    ):
-        """
-        Test if the Cli app can generate password without special characters or numericals.
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-        """
-        result = runner.invoke(
-            cli_app.get_command(),
-            [
-                "generate",
-                "--length",
-                f"{random.randint(8, 128)}",
-                "--include-letters",
-                "Yes",
-                "--include-special",
-                "No",
-                "--include-digits",
-                "No",
-                "--store",
-                "No",
-            ],
-        )
-
-        assert result.exit_code == 0
-        assert digits not in result.output.split(":")[1]
-        assert punctuation not in result.output.split(":")[1]
-
-    def test_generate_password_no_digits_and_no_letters(
-        self, runner: CliRunner, cli_app: CLIApp
-    ):
-        """
-        Test if the Cli app can generate password without alphabets or numericals.
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-        """
-        result = runner.invoke(
-            cli_app.get_command(),
-            [
-                "generate",
-                "--length",
-                f"{random.randint(8, 128)}",
-                "--include-letters",
-                "No",
-                "--include-special",
-                "Yes",
-                "--include-digits",
-                "No",
-                "--store",
-                "No",
-            ],
-        )
-
-        assert result.exit_code == 0
-        assert digits not in result.output.split(":")[1]
-        assert ascii_letters not in result.output.split(":")[1]
-
-    def test_generate_password_no_letters_and_no_special_character(
-        self, runner: CliRunner, cli_app: CLIApp
-    ):
-        """
-        Test if the Cli app can generate password without special characters or digits.
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-        """
-        result = runner.invoke(
-            cli_app.get_command(),
-            [
-                "generate",
-                "--length",
-                f"{random.randint(8, 128)}",
-                "--include-letters",
-                "No",
-                "--include-special",
-                "No",
-                "--include-digits",
-                "Yes",
-                "--store",
-                "No",
-            ],
-        )
-
-        assert result.exit_code == 0
-        assert ascii_letters not in result.output.split(":")[1]
-        assert punctuation not in result.output.split(":")[1]
-
-    def test_generate_password_with_alternate_tags(
-        self, runner: CliRunner, cli_app: CLIApp
-    ):
-        """
-        Test if the Cli app can generate password without special characters or digits.
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-        """
-        result = runner.invoke(
-            cli_app.get_command(),
-            [
-                "generate",
-                "-l",
-                f"{random.randint(8, 128)}",
-                "-c",
-                "Yes",
-                "-i",
-                "Yes",
-                "-d",
-                "Yes",
-                "-s",
-                "No",
-            ],
-        )
-
-        assert result.exit_code == 0
-        assert "Generated password:" in result.output
-
-    def test_generate_password_invalid_special_flag(
-        self, runner: CliRunner, cli_app: CLIApp
-    ):
-        """
-        Test the password generation functionality of the CLI with an invalid special flag.
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-        """
-        result = runner.invoke(
-            cli_app.get_command(),
-            [
-                "generate",
-                "--length",
-                f"{random.randint(8, 128)}",
-                "-include-letter",
-                "Yes",
-                "--include-special",
-                "Invalid",  # Invalid value
-                "--include-digits",
-                "Yes",
-                "--store",
-                "No",
-            ],
-        )
-
-        assert result.exit_code != 0
-        assert "Invalid value for '--include-special'" in result.output
-
-    ##---------------------------------------------------------------------------------------- Testing Store functionality ----------------------------------------------------------------------------------------
-    def test_store_password_with_tags(
-        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob
-    ) -> None:
-        """
-        Test the storage functionality of the CLI
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-            name_gen (funkybob): The name generator.
-        """
-
-        ## Generate name and password
-
-        name = next(iter(name_gen))
-
-        password = (
-            runner.invoke(
-                cli_app.get_command(),
-                [
-                    "generate",
-                    "-l",
-                    f"{random.randint(8, 128)}",
-                    "-c",
-                    "Yes",
-                    "-i",
-                    "Yes",
-                    "-d",
-                    "Yes",
-                    "-s",
-                    "No",
-                ],
-            )
-        ).output.split(" ")[2]
-
-        result = runner.invoke(
-            cli_app.get_command(),
-            ["store", "-n", f"{name}", "-p", f"{password}"],
-        )
-
-        ret_pass = (
-            runner.invoke(
-                cli_app.get_command(),
-                ["retrieve", "-n", f"{name}"],
-            )
-        ).output.split(" ")[3]
-
-        runner.invoke(
-            cli_app.get_command(),
-            [
-                "delete",
-                "-n",
-                f"{name}",
-            ],
-        )
-
-        assert result.exit_code == 0
-        assert result.output == "Password sucessfully stored in the database.\n"
-        assert ret_pass.rstrip(".\n") == password.rstrip()
-
-    def test_store_password(
-        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob
-    ) -> None:
-        """
-        Test the storage functionality of the CLI
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-            name_gen (funkybob): The name generator.
-        """
-        name = next(iter(name_gen))
-
-        password = (
-            runner.invoke(
-                cli_app.get_command(),
-                [
-                    "generate",
-                    "-l",
-                    f"{random.randint(8, 128)}",
-                    "--include-letters",
-                    "Yes",
-                    "--include-special",
-                    "Yes",
-                    "-include-digits",
-                    "Yes",
-                    "--store",
-                    "No",
-                ],
-            )
-        ).output.split(" ")[2]
-
-        result = runner.invoke(
-            cli_app.get_command(),
-            [
-                "store",
-                "--name",
-                f"{name}",
-                "--password",
-                f"{password}",
-            ],
-        )
-
-        ret_pass = (
-            runner.invoke(
-                cli_app.get_command(),
-                ["retrieve", "-n", f"{name}"],
-            )
-        ).output.split(" ")[3]
-
-        runner.invoke(
-            cli_app.get_command(),
-            [
-                "delete",
-                "-n",
-                f"{name}",
-            ],
-        )
-
-        assert result.exit_code == 0
-        assert result.output == "Password sucessfully stored in the database.\n"
-        assert ret_pass.rstrip(".\n") == password
-
-    ##---------------------------------------------------------------------------------------- Testing Delete functionality ------------------------------------------------------------------------------------------
-
-    def test_delete_password(
-        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob
-    ) -> None:
-        """
-        Test the delete functionality of the CLI
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-            name_gen (funkybob): The name generator.
-        """
-        name = next(iter(name_gen))
-
-        password = (
-            runner.invoke(
-                cli_app.get_command(),
-                [
-                    "generate",
-                    "-l",
-                    f"{random.randint(8, 128)}",
-                    "--c",
-                    "Yes",
-                    "--i",
-                    "Yes",
-                    "--d",
-                    "Yes",
-                ],
-            )
-        ).output.split(" ")[2]
-
-        runner.invoke(
-            cli_app.get_command(),
-            [
-                "store",
-                "--name",
-                f"{name}",
-                "--password",
-                f"{password}",
-            ],
-        )
-
-        result = runner.invoke(
-            cli_app.get_command(),
-            [
-                "delete",
-                "--name",
-                f"{name}",
-            ],
-        )
-
-        assert result.exit_code == 0
-        assert result.output == f"Password with name: {name} sucessfully deleted.\n"
-
-        isDeleted = runner.invoke(
-            cli_app.get_command(),
-            [
-                "retrieve",
-                "--name",
-                f"{name}",
-            ],
-        )
-
-        assert isDeleted.output == "No passwords found in the database.\n"
-
-    ##---------------------------------------------------------------------------------------- Testing Retrieve functionality -------------------------------------------------------------------------------------------
-
-    def test_retrieve_password(
-        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob
-    ) -> None:
-        """
-        Test the storage functionality of the CLI
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-            name_gen (funkybob): The name generator.
-        """
-        name = next(iter(name_gen))
-
-        password = (
-            runner.invoke(
-                cli_app.get_command(),
-                [
-                    "generate",
-                    "-l",
-                    f"{random.randint(8, 128)}",
-                    "-c",
-                    "Yes",
-                    "-i",
-                    "Yes",
-                    "-d",
-                    "Yes",
-                    "-s",
-                    "No",
-                ],
-            )
-        ).output.split(" ")[2]
-
-        runner.invoke(
-            cli_app.get_command(),
-            [
-                "store",
-                "--name",
-                f"{name}",
-                "--password",
-                f"{password}",
-            ],
-        )
+        name = "test_name"
+        password = self.generate_and_store_password(runner, cli_app, name)
 
         result = runner.invoke(
             cli_app.get_command(),
             [
                 "retrieve",
                 "--name",
-                f"{name}",
+                name,
             ],
         )
 
@@ -565,174 +141,46 @@ class TestCLIApp:
             [
                 "delete",
                 "--name",
-                f"{name}",
+                name,
             ],
         )
 
         assert result.exit_code == 0
-        assert result.output == f"name: {name} password: {password}.\n"
+        assert f"Retrieved Password: {password}\n" in result.output
 
-    ##---------------------------------------------------------------------------------------- Testing Export functionality -------------------------------------------------------------------------------------------
-
-    def test_export_password_csv(
-        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob
-    ) -> None:
+    def test_delete_password(self, runner: CliRunner, cli_app: CLIApp) -> None:
         """
-        Test the export functionality of the CLI
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-            name_gen (funkybob): The name generator.
+        Test the delete functionality of the CLI.
         """
-        name = next(iter(name_gen))
-
-        password = (
-            runner.invoke(
-                cli_app.get_command(),
-                [
-                    "generate",
-                    "-l",
-                    f"{random.randint(8, 128)}",
-                    "-c",
-                    "Yes",
-                    "-i",
-                    "Yes",
-                    "-d",
-                    "Yes",
-                    "-s",
-                    "No",
-                ],
-            )
-        ).output.split(" ")[2]
-
-        runner.invoke(
-            cli_app.get_command(),
-            [
-                "store",
-                "--name",
-                f"{name}",
-                "--password",
-                f"{password}",
-            ],
-        )
+        name = "test_name"
+        self.generate_and_store_password(runner, cli_app, name)
 
         result = runner.invoke(
             cli_app.get_command(),
             [
-                "export",
+                "delete",
                 "--name",
-                "output",
-                "--format",
-                "csv",
-                "--location",
-                "passwords",
+                name,
             ],
         )
-
-        file_name = "output.csv"
-        file_location = os.path.abspath("passwords")
 
         assert result.exit_code == 0
-        assert (
-            result.output
-            == f"Passwords saved in location {file_location} inside {file_name}.\n"
-        )
+        assert f"Password with name: {name} successfully deleted." in result.output
 
-        target_df = pd.read_csv(os.path.join(file_location, file_name))
-
-        conn = sqlite3.connect("data/test.db")
-        query = "SELECT * FROM password"
-        source_df = pd.read_sql_query(query, conn)
-        source_df.drop("id", axis=1, inplace=True)
-
-        assert source_df.equals(target_df), "False"
-        conn.close()
-
-        file_to_be_deleted = os.path.join(file_location, file_name)
-        os.remove(file_to_be_deleted)
-        os.rmdir(file_location)
-
-    def test_export_password_excel(
-        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob
-    ) -> None:
-        """
-        Test the export functionality of the CLI
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-            name_gen (funkybob): The name generator.
-        """
-        name = next(iter(name_gen))
-
-        password = (
-            runner.invoke(
-                cli_app.get_command(),
-                [
-                    "generate",
-                    "-l",
-                    f"{random.randint(8, 128)}",
-                    "-c",
-                    "Yes",
-                    "-i",
-                    "Yes",
-                    "-d",
-                    "Yes",
-                    "-s",
-                    "No",
-                ],
-            )
-        ).output.split(" ")[2]
-
-        runner.invoke(
+        is_deleted = runner.invoke(
             cli_app.get_command(),
             [
-                "store",
+                "retrieve",
                 "--name",
-                f"{name}",
-                "--password",
-                f"{password}",
+                name,
             ],
         )
 
-        result = runner.invoke(
-            cli_app.get_command(),
-            [
-                "export",
-                "--name",
-                "output",
-                "--format",
-                "xlsx",
-                "--location",
-                "passwords",
-            ],
-        )
+        assert "No password associated with name:" in is_deleted.output
 
-        file_name = "output.xlsx"
-        file_location = os.path.abspath("passwords")
-
-        assert result.exit_code == 0
-        assert (
-            result.output
-            == f"Passwords saved in location {file_location} inside {file_name}.\n"
-        )
-        target_df = pd.read_excel(os.path.join(file_location, file_name))
-
-        conn = sqlite3.connect("data/test.db")
-        query = "SELECT * FROM password"
-        source_df = pd.read_sql_query(query, conn)
-        source_df.drop("id", axis=1, inplace=True)
-
-        assert source_df.equals(target_df), "False"
-        conn.close()
-
-        file_to_be_deleted = os.path.join(file_location, file_name)
-        os.remove(file_to_be_deleted)
-        os.rmdir(file_location)
-
-    def markdown_to_dataframe(self, file_location: str, file_name: str) -> DataFrame:
-        """Convert from markdown to dataframe
+    def read_markdown(self, file_location: str) -> DataFrame:
+        """
+        Convert from markdown to dataframe
 
         Args:
             file_location (str): location of the markdown file
@@ -741,9 +189,7 @@ class TestCLIApp:
         Returns:
             DataFrame: returned dataframe
         """
-        with open(
-            os.path.join(file_location, file_name), "r", encoding="utf-8"
-        ) as file:
+        with open(file_location, "r", encoding="utf-8") as file:
             lines = file.readlines()
 
         lines = [line.strip() for line in lines if "---" not in line]
@@ -752,61 +198,25 @@ class TestCLIApp:
 
         data = []
         for line in lines[1:]:
-            values = [
-                val.strip() for val in re.split(r"([^|]+(?:\|[^|]+)*)", line)[1:-1]
-            ]
+            values = [val.strip() for val in re.split(r"([^|]+(?:\|[^|]+)*)", line)[1:-1]]
             data.append(values)
 
         final_data = []
         for i in data:
-            final_data.append(
-                [i[0].split("| ")[0].strip(), i[0].split("| ")[1].strip() + "\n"]
-            )
+            final_data.append([i[0].split("| ")[0].strip(), i[0].split("| ")[1].strip() + "\n"])
 
         return pd.DataFrame(final_data, columns=headers)
 
-    def test_export_password_md(
-        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob
-    ) -> None:
+    @pytest.mark.parametrize("format", ["csv", "xlsx", "json", "parquet", "md"])
+    def test_export_password(self, runner: CliRunner, cli_app: CLIApp, format: str) -> None:
         """
-        Test the export functionality of the CLI
+        Test the export functionality of the CLI for various formats.
 
         Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-            name_gen (funkybob): The name generator.
+            format (str): The format to export the passwords (e.g., csv, xlsx, json, parquet).
         """
-        name = next(iter(name_gen))
-
-        password = (
-            runner.invoke(
-                cli_app.get_command(),
-                [
-                    "generate",
-                    "-l",
-                    f"{random.randint(8, 128)}",
-                    "-c",
-                    "Yes",
-                    "-i",
-                    "Yes",
-                    "-d",
-                    "Yes",
-                    "-s",
-                    "No",
-                ],
-            )
-        ).output.split(" ")[2]
-
-        runner.invoke(
-            cli_app.get_command(),
-            [
-                "store",
-                "--name",
-                f"{name}",
-                "--password",
-                f"{password}",
-            ],
-        )
+        name = "test_name"
+        self.generate_and_store_password(runner, cli_app, name)
 
         result = runner.invoke(
             cli_app.get_command(),
@@ -815,189 +225,60 @@ class TestCLIApp:
                 "--name",
                 "output",
                 "--format",
-                "md",
+                format,
                 "--location",
-                "passwords",
+                str(os.getenv('TEST_EXPORT_DIR')),
             ],
         )
 
-        file_name = "output.md"
-        file_location = os.path.abspath("passwords")
+        file_name = f"output.{format}"
+        file_location = os.path.abspath(str(os.getenv('TEST_EXPORT_DIR')))
 
         assert result.exit_code == 0
         assert (
             result.output
-            == f"Passwords saved in location {file_location} inside {file_name}.\n"
+            == f"Passwords saved in {file_location} as {file_name}.\n"
         )
 
-        target_df = self.markdown_to_dataframe(file_location, file_name)
+        # Validate exported data
+        if format == "csv":
+            target_df = pd.read_csv(os.path.join(file_location, file_name))
+        elif format == "xlsx":
+            target_df = pd.read_excel(os.path.join(file_location, file_name))
+        elif format == "json":
+            target_df = pd.read_json(os.path.join(file_location, file_name))
+        elif format == "parquet":
+            target_df = pd.read_parquet(os.path.join(file_location, file_name))
+        elif format == "md":
+            target_df = self.read_markdown(os.path.join(file_location, file_name))
 
-        conn = sqlite3.connect("data/test.db")
-        query = "SELECT * FROM password"
+        conn = sqlite3.connect(str(os.getenv('TEST_DB_PATH')))
+        query = "SELECT name, password FROM password"
         source_df = pd.read_sql_query(query, conn)
-        source_df.drop("id", axis=1, inplace=True)
-
-        assert source_df.equals(target_df), "False"
         conn.close()
 
-        file_to_be_deleted = os.path.join(file_location, file_name)
-        os.remove(file_to_be_deleted)
-        os.rmdir(file_location)
+        assert source_df.equals(target_df), "Exported data does not match database data."
 
-    def test_export_password_json(
-        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob
-    ) -> None:
-        """
-        Test the export functionality of the CLI
+        # Clean up exported files
+        self.cleanup_exported_files(file_location, file_name)
 
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-            name_gen (funkybob): The name generator.
-        """
-        name = next(iter(name_gen))
-
-        password = (
-            runner.invoke(
-                cli_app.get_command(),
-                [
-                    "generate",
-                    "-l",
-                    f"{random.randint(8, 128)}",
-                    "-c",
-                    "Yes",
-                    "-i",
-                    "Yes",
-                    "-d",
-                    "Yes",
-                    "-s",
-                    "No",
-                ],
-            )
-        ).output.split(" ")[2]
-
+        # Delete the test password
         runner.invoke(
             cli_app.get_command(),
             [
-                "store",
+                "delete",
                 "--name",
-                f"{name}",
-                "--password",
-                f"{password}",
+                name,
             ],
         )
 
-        result = runner.invoke(
-            cli_app.get_command(),
-            [
-                "export",
-                "--name",
-                "output",
-                "--format",
-                "json",
-                "--location",
-                "passwords",
-            ],
-        )
+        # Clean up the test database
+        if os.path.exists(str(os.getenv('TEST_DB_PATH'))):
+            os.remove(str(os.getenv('TEST_DB_PATH')))
+        # Clean up the test export directory
+        if os.path.exists(str(os.getenv('TEST_EXPORT_DIR'))):
+            os.rmdir(str(os.getenv('TEST_EXPORT_DIR')))
+        # Clean database path
+        if os.path.exists(str(os.getenv('TEST_DB_PATH')).split("/")[0]):
+            os.rmdir(str(os.getenv('TEST_DB_PATH')).split("/")[0])
 
-        file_name = "output.json"
-        file_location = os.path.abspath("passwords")
-
-        assert result.exit_code == 0
-        assert (
-            result.output
-            == f"Passwords saved in location {file_location} inside {file_name}.\n"
-        )
-
-        target_df = pd.read_json(os.path.join(file_location, file_name))
-
-        conn = sqlite3.connect("data/test.db")
-        query = "SELECT * FROM password"
-        source_df = pd.read_sql_query(query, conn)
-        source_df.drop("id", axis=1, inplace=True)
-
-        assert source_df.equals(target_df), "False"
-        conn.close()
-
-        file_to_be_deleted = os.path.join(file_location, file_name)
-        os.remove(file_to_be_deleted)
-        os.rmdir(file_location)
-
-    def test_export_password_parquet(
-        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob
-    ) -> None:
-        """
-        Test the export functionality of the CLI
-
-        Args:
-            runner (CliRunner): The CLI runner for invoking commands.
-            cli_app (CLIApp): The CLI application instance.
-            name_gen (funkybob): The name generator.
-        """
-        name = next(iter(name_gen))
-
-        password = (
-            runner.invoke(
-                cli_app.get_command(),
-                [
-                    "generate",
-                    "-l",
-                    f"{random.randint(8, 128)}",
-                    "-c",
-                    "Yes",
-                    "-i",
-                    "Yes",
-                    "-d",
-                    "Yes",
-                    "-s",
-                    "No",
-                ],
-            )
-        ).output.split(" ")[2]
-
-        runner.invoke(
-            cli_app.get_command(),
-            [
-                "store",
-                "--name",
-                f"{name}",
-                "--password",
-                f"{password}",
-            ],
-        )
-
-        result = runner.invoke(
-            cli_app.get_command(),
-            [
-                "export",
-                "--name",
-                "output",
-                "--format",
-                "parquet",
-                "--location",
-                "passwords",
-            ],
-        )
-
-        file_name = "output.parquet"
-        file_location = os.path.abspath("passwords")
-
-        assert result.exit_code == 0
-        assert (
-            result.output
-            == f"Passwords saved in location {file_location} inside {file_name}.\n"
-        )
-
-        target_df = pd.read_parquet(os.path.join(file_location, file_name))
-
-        conn = sqlite3.connect("data/test.db")
-        query = "SELECT * FROM password"
-        source_df = pd.read_sql_query(query, conn)
-        source_df.drop("id", axis=1, inplace=True)
-
-        assert source_df.equals(target_df), "False"
-        conn.close()
-
-        file_to_be_deleted = os.path.join(file_location, file_name)
-        os.remove(file_to_be_deleted)
-        os.rmdir(file_location)

@@ -1,12 +1,15 @@
 """
-This module provides the PasswordGenerator class for generating secure passwords
+This module provides the PasswordGenerator class for generating secure passwords.
 """
 
+import os
 from random import shuffle, uniform
 from secrets import choice
 from string import ascii_letters, digits, punctuation
 import logging
+from dotenv import load_dotenv
 
+load_dotenv()
 
 class PasswordGenerator:
     """
@@ -26,19 +29,16 @@ class PasswordGenerator:
         Returns:
             bool: True if the length is valid, False otherwise.
         """
-        if length < 8:
-            raise ValueError("Password length should be at least 8 characters.")
-        if length > 128:
-            raise ValueError("Password length should not exceed 128 characters.")
+        MIN_LENGTH = int(os.getenv("MIN_LENGTH", 8))
+        MAX_LENGTH = int(os.getenv("MAX_LENGTH", 128))
+
+        if length < MIN_LENGTH:
+            raise ValueError(f"Password length should be at least {MIN_LENGTH} characters.")
+        if length > MAX_LENGTH:
+            raise ValueError(f"Password length should not exceed {MAX_LENGTH} characters.")
         return True
 
-    def generate_password(
-        self,
-        length: int,
-        include_letters: bool = False,
-        include_special: bool = False,
-        include_digits: bool = False,
-    ) -> str:
+    def generate_password(self,length: int,include_letters: bool = False,include_special: bool = False,include_digits: bool = False) -> str:
         """
         Generate a secure password.
 
@@ -55,6 +55,9 @@ class PasswordGenerator:
             str: Generated password.
         """
         self.is_valid(length)
+
+        if not (include_letters or include_special or include_digits):
+            raise ValueError("At least one character type must be included.")
 
         character_pool: list = []
         distribution: int = length
@@ -124,9 +127,6 @@ class PasswordGenerator:
                     )
                 if include_digits:
                     character_pool.append([choice(digits) for _ in range(distribution)])
-
-        if not character_pool:
-            raise ValueError("Character pool cannot be empty.")
 
         character_pool = [item for sublist in character_pool for item in sublist]
         shuffle(character_pool)

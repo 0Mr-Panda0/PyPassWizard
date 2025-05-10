@@ -14,149 +14,58 @@ class Database:
     Database class for managing password storage and retrieval.
     """
 
-    def __init__(self, path: str):
-        """
-        Initializes the Database class, sets up the database path.
-
-        Args:
-            path (str): path to the database.
-        """
-        self.db_path = os.path.abspath(path)
-        self.db = self.configuring_database()
+    def __init__(self, path: str) -> None:
+        self.db_path: str = os.path.abspath(path)
+        self.create_database_path()
         self.creating_table()
 
     def create_database_path(self) -> None:
-        """
-        Creates the directory for the database if it does not exist.
-        """
         data_dir = os.path.dirname(self.db_path)
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
             logging.info(f"Created directory: {data_dir}")
 
-    def configuring_database(self) -> sqlite3.Connection:
-        """
-        Configures the database connection.
-
-        Returns:
-            sqlite3.Connection: Database connection object.
-        """
-        self.create_database_path()
-        try:
-            db = sqlite3.connect(self.db_path)
-            logging.info(f"Connected to database at {self.db_path}")
-            return db
-        except sqlite3.Error as e:
-            logging.error(f"Failed to connect to database: {e}")
-            raise
-
     def creating_table(self) -> None:
+        query = """
+        CREATE TABLE IF NOT EXISTS password (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE,
+            password TEXT
+        )
         """
-        Creates the password table if it does not exist.
-        """
+        self.execute_query(query)
+
+    def execute_query(self, query: str, params: tuple = ()) -> list:
         try:
-            cursor = self.db.cursor()
-            cursor.execute(
-                "CREATE TABLE IF NOT EXISTS password (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, password TEXT)"
-            )
-            self.db.commit()
-            cursor.close()
-            logging.info("Table 'password' ensured to exist.")
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, params)
+                result = cursor.fetchall()
+                conn.commit()
+                return result
         except sqlite3.Error as e:
-            logging.error(f"Failed to create table: {e}")
-            raise
+            logging.error(f"Database query failed: {e}")
+            raise ConnectionError(f"{e}")
 
     def inserting_password(self, name: str, password: str) -> None:
-        """
-        Inserts a password into the database.
-        Args:
-            password (str): The password to be inserted.
-
-        Raises:
-            ValueError: If the password is empty.
-        """
         if not password:
-            logging.error("Password cannot be empty.")
             raise ValueError("Password cannot be empty.")
-        try:
-            cursor = self.db.cursor()
-            cursor.execute(
-                "INSERT INTO password(name,password) VALUES(?,?)", (name, password)
-            )
-            self.db.commit()
-            cursor.close()
-            logging.info("Password inserted successfully.")
-        except sqlite3.Error as e:
-            logging.error(f"Failed to insert password: {e}")
-            raise
+        self.execute_query("INSERT INTO password(name, password) VALUES(?, ?)", (name, password))
+        logging.info(f"Password for name '{name}' inserted successfully.")
 
-    def retrieve_password_with_name(self, name: str) -> str | None:
-        """
-        Retrieves password with provided name
-
-        Args:
-            name (str): Name associated with a password
-
-        Returns:
-            str: password associated with the name
-        """
-        try:
-            cursor = self.db.cursor()
-            cursor.execute(f"SELECT password FROM password WHERE name = '{name}'")
-            result = cursor.fetchone()
-            cursor.close()
-            if result:
-                logging.info("Password retrieved successfully.")
-                return result[0]
-            else:
-                logging.warning("No passwords found in the database.")
-                return None
-        except sqlite3.Error as e:
-            logging.error(f"Failed to retrieve password: {e}")
-            return None
+    def retrieve_password_with_name(self, name: str) -> str:
+        result = self.execute_query("SELECT password FROM password WHERE name = ?", (name,))
+        if result:
+            return result[0][0]
+        raise ValueError(f"No password associated with name: {name}")
 
     def delete_password_with_name(self, name: str) -> None:
-        """
-        Deleting the password associated withe the name
-
-        Args:
-            name (str): name for which the associated password must be deleted.
-        """
-        try:
-            cursor = self.db.cursor()
-            cursor.execute(f"DELETE FROM password WHERE name = '{name}'")
-            self.db.commit()
-            cursor.close()
-            logging.info(f"Password associated with name: {name} has been deleted!")
-        except sqlite3.Error as e:
-            logging.error(f"Failed to insert password: {e}")
-            raise
+        self.execute_query("DELETE FROM password WHERE name = ?", (name,))
+        logging.info(f"Password for name '{name}' deleted successfully.")
 
     def show_all_passwords(self) -> DataFrame:
-        """
-        Return all the stored password.
-        """
-        try:
-            cursor = self.db.cursor()
-            cursor.execute("SELECT name,password FROM password")
-            data = cursor.fetchall()
-            column_names = [description[0] for description in cursor.description]
-            df = pd.DataFrame(data, columns=column_names)
-            cursor.close()
-            if df is not None:
-                logging.info("Table data retrieved sucessfully.")
-                return df
-            else:
-                logging.warning("There is no password table.")
-                raise ValueError("UNable to feth password table data")
-        except sqlite3.Error as e:
-            logging.error(f"Failed to retrieve passwords: {e}")
-            raise
-
-    def close_connection(self) -> None:
-        """
-        Closes the database connection.
-        """
-        if self.db:
-            self.db.close()
-            logging.info("Database connection closed.")
+        result = self.execute_query("SELECT name, password FROM password")
+        df = pd.DataFrame(result, columns=["name", "password"])
+        if not df.empty:
+            return df
+        raise ValueError("No data found in the 'password' table.")

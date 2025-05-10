@@ -1,6 +1,8 @@
 # PyPassWizard
 
-Welcome to **PyPassWizard**! This is a command-line application designed to generate and securely store passwords. It is lightweight, easy to use, and perfect for managing your passwords directly from the terminal.
+Welcome to **PyPassWizard**!
+
+This is a command-line application designed to generate and securely store passwords. It is lightweight, easy to use, and perfect for managing your passwords directly from the terminal.
 
 ## Features
 
@@ -32,16 +34,22 @@ To set up the project locally, follow these steps:
     uv sync
     ```
 
-4. Run the application: or
-
-    ```bash
-    uv run -m src.cli --help
-    ```
-
-5. Download from pip:
+4. Download the application from pip or uv:
 
     ```bash
     pip install pypasswizard
+    ```
+
+    or
+
+    ```bash
+    uv add pypasswizard
+    ```
+
+5. Run the application:
+
+    ```bash
+    pypasswizard --help
     ```
 
 ## Usage
@@ -53,7 +61,7 @@ Here are some examples of how to use PyPassWizard:
 Generate a random password with a specified length:
 
 ```bash
-pypasswizard generate -l 13 -i yes -c yes -d yes
+pypasswizard generate -l 13 -c yes -i yes -d yes -s no
 ```
 
 ### Store a Password
@@ -95,7 +103,7 @@ Note: Current supported formats csv, xlsx, parquet, json, md
 View all available commands and options:
 
 ```bash
-pypasswizard --help
+pypasswizard --version
 ```
 
 ## Contributing
@@ -114,7 +122,7 @@ Contributions are welcome! To contribute:
 Here are some planned features for future releases:
 
 - Password strength checker.
-- Export and import passwords in encrypted formats.
+- Import passwords in encrypted formats.
 - Multi-language support for CLI messages.
 - Integration with cloud storage for password backups.
 
