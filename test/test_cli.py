@@ -7,10 +7,8 @@ import os
 import pandas as pd  # type: ignore
 import funkybob  # type: ignore
 import sqlite3
-import re
 from click.testing import CliRunner
 from src.cli import CLIApp
-from pandera.typing import DataFrame
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -36,7 +34,7 @@ class TestCLIApp:
             CLIApp: An instance of the CLI application.
         """
         return CLIApp(str(os.getenv("TEST_DB_PATH", "data/test.db")))
-    
+
     @pytest.fixture
     def name_gen(self) -> funkybob.RandomNameGenerator:
         """
@@ -161,7 +159,9 @@ class TestCLIApp:
         assert result.exit_code == 0
         assert f"Retrieved Password: {password}\n" in result.output
 
-    def test_delete_password(self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob.RandomNameGenerator) -> None:
+    def test_delete_password(
+        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob.RandomNameGenerator
+    ) -> None:
         """
         Test the delete functionality of the CLI.
         """
@@ -191,42 +191,13 @@ class TestCLIApp:
 
         assert "No password associated with name:" in is_deleted.output
 
-    def read_markdown(self, file_location: str) -> DataFrame:
-        """
-        Convert from markdown to dataframe
-
-        Args:
-            file_location (str): location of the markdown file
-            file_name (str): name of the markdoen file
-
-        Returns:
-            DataFrame: returned dataframe
-        """
-        with open(file_location, "r", encoding="utf-8") as file:
-            lines = file.readlines()
-
-        lines = [line.strip() for line in lines if "---" not in line]
-
-        headers = [h.strip() for h in lines[0].split("|")[1:-1]]
-
-        data = []
-        for line in lines[1:]:
-            values = [
-                val.strip() for val in re.split(r"([^|]+(?:\|[^|]+)*)", line)[1:-1]
-            ]
-            data.append(values)
-
-        final_data = []
-        for i in data:
-            final_data.append(
-                [i[0].split("| ")[0].strip(), i[0].split("| ")[1].strip() + "\n"]
-            )
-
-        return pd.DataFrame(final_data, columns=headers)
-
     @pytest.mark.parametrize("format", ["csv", "xlsx", "json", "parquet", "md"])
     def test_export_password(
-        self, runner: CliRunner, cli_app: CLIApp, format: str, name_gen: funkybob.RandomNameGenerator
+        self,
+        runner: CliRunner,
+        cli_app: CLIApp,
+        format: str,
+        name_gen: funkybob.RandomNameGenerator,
     ) -> None:
         """
         Test the export functionality of the CLI for various formats.
@@ -246,12 +217,12 @@ class TestCLIApp:
                 "--format",
                 format,
                 "--location",
-                str(os.getenv("TEST_EXPORT_DIR","passwords")),
+                str(os.getenv("TEST_EXPORT_DIR", "passwords")),
             ],
         )
 
         file_name = f"output.{format}"
-        file_location = os.path.abspath(str(os.getenv("TEST_EXPORT_DIR","passwords")))
+        file_location = os.path.abspath(str(os.getenv("TEST_EXPORT_DIR", "passwords")))
 
         assert result.exit_code == 0
         assert result.output == f"Passwords saved in {file_location} as {file_name}.\n"
@@ -266,9 +237,9 @@ class TestCLIApp:
         elif format == "parquet":
             target_df = pd.read_parquet(os.path.join(file_location, file_name))
         elif format == "md":
-            target_df = self.read_markdown(os.path.join(file_location, file_name))
+            target_df = cli_app.read_markdown(os.path.join(file_location, file_name))
 
-        conn = sqlite3.connect(str(os.getenv("TEST_DB_PATH","data/test.db")))
+        conn = sqlite3.connect(str(os.getenv("TEST_DB_PATH", "data/test.db")))
         query = "SELECT name, password FROM password"
         source_df = pd.read_sql_query(query, conn)
         conn.close()
@@ -291,8 +262,118 @@ class TestCLIApp:
         )
 
         # Clean up the test database
-        if os.path.exists(str(os.getenv("TEST_DB_PATH","data/test.db"))):
-            os.remove(str(os.getenv("TEST_DB_PATH","data/test.db")))
+        if os.path.exists(str(os.getenv("TEST_DB_PATH", "data/test.db"))):
+            os.remove(str(os.getenv("TEST_DB_PATH", "data/test.db")))
         # Clean up the test export directory
-        if os.path.exists(str(os.getenv("TEST_EXPORT_DIR","passwords"))):
-            os.rmdir(str(os.getenv("TEST_EXPORT_DIR","passwords")))
+        if os.path.exists(str(os.getenv("TEST_EXPORT_DIR", "passwords"))):
+            os.rmdir(str(os.getenv("TEST_EXPORT_DIR", "passwords")))
+
+    @pytest.mark.parametrize("format", ["csv", "xlsx", "json", "parquet", "md"])
+    def test_import_password(
+        self,
+        runner: CliRunner,
+        cli_app: CLIApp,
+        format: str,
+        name_gen: funkybob.RandomNameGenerator,
+    ) -> None:
+        """
+        Test the export functionality of the CLI for various formats.
+
+        Args:
+            format (str): The format to export the passwords (e.g., csv, xlsx, json, parquet).
+        """
+        name = next(iter(name_gen))
+        self.generate_and_store_password(runner, cli_app, name)
+
+        runner.invoke(
+            cli_app.get_command(),
+            [
+                "export",
+                "--name",
+                "output",
+                "--format",
+                format,
+                "--location",
+                str(os.getenv("TEST_EXPORT_DIR", "passwords")),
+            ],
+        )
+
+        runner.invoke(
+            cli_app.get_command(),
+            [
+                "delete",
+                "--name",
+                name,
+            ],
+        )
+
+        try:
+            file_name = f"output.{format}"
+            file_location = os.path.abspath(
+                str(os.getenv("TEST_EXPORT_DIR", "passwords"))
+            )
+
+            # Import the password
+            result = runner.invoke(
+                cli_app.get_command(),
+                [
+                    "iimport",
+                    "--name",
+                    "output",
+                    "--format",
+                    format,
+                    "--location",
+                    str(os.getenv("TEST_EXPORT_DIR", "passwords")),
+                ],
+            )
+            assert result.exit_code == 0
+            assert (
+                result.output
+                == f"Passwords imported from {file_location} as {file_name}.\n"
+            )
+        except Exception as e:
+            print(f"Error during import: {e}")
+            assert False, "Import failed"
+
+        conn = sqlite3.connect(str(os.getenv("TEST_DB_PATH", "data/test.db")))
+        query = f"SELECT name, password FROM password WHERE name = '{name}'"
+        target_df = pd.read_sql_query(query, conn)
+        conn.close()
+
+        file_name = f"output.{format}"
+        file_location = os.path.abspath(str(os.getenv("TEST_EXPORT_DIR", "passwords")))
+
+        if format == "csv":
+            source_df = pd.read_csv(os.path.join(file_location, file_name))
+        elif format == "xlsx":
+            source_df = pd.read_excel(os.path.join(file_location, file_name))
+        elif format == "json":
+            source_df = pd.read_json(os.path.join(file_location, file_name))
+        elif format == "parquet":
+            source_df = pd.read_parquet(os.path.join(file_location, file_name))
+        elif format == "md":
+            source_df = cli_app.read_markdown(os.path.join(file_location, file_name))
+
+        assert source_df.equals(target_df), (
+            "Exported data does not match database data."
+        )
+
+        # Clean up exported files
+        self.cleanup_exported_files(file_location, file_name)
+
+        # Delete the test password
+        runner.invoke(
+            cli_app.get_command(),
+            [
+                "delete",
+                "--name",
+                name,
+            ],
+        )
+
+        # Clean up the test database
+        if os.path.exists(str(os.getenv("TEST_DB_PATH", "data/test.db"))):
+            os.remove(str(os.getenv("TEST_DB_PATH", "data/test.db")))
+        # Clean up the test export directory
+        if os.path.exists(str(os.getenv("TEST_EXPORT_DIR", "passwords"))):
+            os.rmdir(str(os.getenv("TEST_EXPORT_DIR", "passwords")))

@@ -59,8 +59,8 @@ class TestPasswordGenerator:
         """
         Test if the password length is valid.
         """
-        assert self.generator.is_valid(int(os.getenv("MIN_LENGTH",8))) is True
-        assert self.generator.is_valid(int(os.getenv("MAX_LENGTH",128))) is True
+        assert self.generator.is_valid(int(os.getenv("MIN_LENGTH", 8))) is True
+        assert self.generator.is_valid(int(os.getenv("MAX_LENGTH", 128))) is True
 
     def test_is_valid_with_invalid_length(self):
         """
@@ -69,11 +69,11 @@ class TestPasswordGenerator:
         with pytest.raises(
             ValueError, match="Password length should be at least 8 characters."
         ):
-            self.generator.is_valid(int(os.getenv("MIN_LENGTH",8)) - 1)
+            self.generator.is_valid(int(os.getenv("MIN_LENGTH", 8)) - 1)
         with pytest.raises(
             ValueError, match="Password length should not exceed 128 characters."
         ):
-            self.generator.is_valid(int(os.getenv("MAX_LENGTH",128)) + 1)
+            self.generator.is_valid(int(os.getenv("MAX_LENGTH", 128)) + 1)
 
     @pytest.mark.parametrize(
         "length, include_letters, include_digits, include_special, has_letters, has_digits, has_special",

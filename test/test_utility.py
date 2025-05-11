@@ -26,7 +26,7 @@ class TestDatabase:
         removes the database file after each test.
         """
         # Setup
-        self.db_instance = Database(str(os.getenv("TEST_DB_PATH","data/test.db")))
+        self.db_instance = Database(str(os.getenv("TEST_DB_PATH", "data/test.db")))
         yield
         # Teardown
         if os.path.exists(self.db_instance.db_path):
@@ -41,7 +41,7 @@ class TestDatabase:
             PasswordGenerator: PasswordGenerator class.
         """
         return PasswordGenerator()
-    
+
     @pytest.fixture
     def name_gen(self) -> funkybob:
         """
@@ -79,11 +79,15 @@ class TestDatabase:
         """
         Test if the password table is created in the database.
         """
-        query = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{str(os.getenv('TEST_TABLE_NAME','password'))}';"
+        query = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{str(os.getenv('TEST_TABLE_NAME', 'password'))}';"
         result = self.execute_query(query)
-        assert result, f"Table '{str(os.getenv('TEST_TABLE_NAME','password'))}' should exist."
+        assert result, (
+            f"Table '{str(os.getenv('TEST_TABLE_NAME', 'password'))}' should exist."
+        )
 
-    def test_insert_password(self, pass_gen: PasswordGenerator, name_gen: funkybob.RandomNameGenerator) -> None:
+    def test_insert_password(
+        self, pass_gen: PasswordGenerator, name_gen: funkybob.RandomNameGenerator
+    ) -> None:
         """
         Test if a password can be inserted into the database.
         """
@@ -92,7 +96,7 @@ class TestDatabase:
 
         self.db_instance.inserting_password(test_name, test_password)
         result = self.execute_query(
-            f"SELECT password FROM {str(os.getenv('TEST_TABLE_NAME','password'))} WHERE name = ?",
+            f"SELECT password FROM {str(os.getenv('TEST_TABLE_NAME', 'password'))} WHERE name = ?",
             (test_name,),
         )
         self.db_instance.delete_password_with_name(test_name)
@@ -109,7 +113,9 @@ class TestDatabase:
         with pytest.raises(ValueError, match="No password associated with name:"):
             self.db_instance.retrieve_password_with_name("non_existent_name")
 
-    def test_delete_password(self, pass_gen: PasswordGenerator, name_gen: funkybob.RandomNameGenerator) -> None:
+    def test_delete_password(
+        self, pass_gen: PasswordGenerator, name_gen: funkybob.RandomNameGenerator
+    ) -> None:
         """
         Test if a password can be deleted from the database.
         """

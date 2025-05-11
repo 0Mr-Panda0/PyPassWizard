@@ -49,7 +49,7 @@ To set up the project locally, follow these steps:
 5. Run the application:
 
     ```bash
-    pypasswizard --help
+    pypasswizard --version
     ```
 
 ## Usage
@@ -103,7 +103,7 @@ Note: Current supported formats csv, xlsx, parquet, json, md
 View all available commands and options:
 
 ```bash
-pypasswizard --version
+pypasswizard --help
 ```
 
 ## Contributing
@@ -122,7 +122,7 @@ Contributions are welcome! To contribute:
 Here are some planned features for future releases:
 
 - Password strength checker.
-- Import passwords in encrypted formats.
+- Add Auto-Completion.
 - Multi-language support for CLI messages.
 - Integration with cloud storage for password backups.
 

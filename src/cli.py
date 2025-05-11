@@ -5,10 +5,12 @@ This module provides a command line interface (CLI) for generating passwords.
 import os
 import click
 import logging
+import re
+import pandas as pd  # type: ignore
+from pandera.typing import DataFrame
 import funkybob  # type: ignore
 from src.core import PasswordGenerator
 from src.utility import Database
-from pandera.typing import DataFrame
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -186,6 +188,69 @@ class CLIApp:
         except Exception as e:
             self.handle_error(e, "Error exporting passwords")
 
+    def read_markdown(self, file_location: str) -> DataFrame:
+        """
+        Convert from markdown to dataframe
+
+        Args:
+            file_location (str): location of the markdown file
+            file_name (str): name of the markdoen file
+
+        Returns:
+            DataFrame: returned dataframe
+        """
+        with open(file_location, "r", encoding="utf-8") as file:
+            lines = file.readlines()
+
+        lines = [line.strip() for line in lines if "---" not in line]
+
+        headers = [h.strip() for h in lines[0].split("|")[1:-1]]
+
+        data = []
+        for line in lines[1:]:
+            values = [
+                val.strip() for val in re.split(r"([^|]+(?:\|[^|]+)*)", line)[1:-1]
+            ]
+            data.append(values)
+
+        final_data = []
+        for i in data:
+            final_data.append(
+                [i[0].split("| ")[0].strip(), i[0].split("| ")[1].strip() + "\n"]
+            )
+
+        return pd.DataFrame(final_data, columns=headers)
+
+    def import_password(self, name: str, format: str, location: str):
+        """
+        Import passwords.
+
+        Args:
+            name (str): Name of the file.
+            format (str): Format of the file.
+            location (str): Location to pick the file.
+        """
+        file_name = f"{name}.{format}"
+        file_location = os.path.abspath(location)
+        try:
+            if format == "csv":
+                data = pd.read_csv(os.path.join(file_location, file_name))
+            elif format == "xlsx":
+                data = pd.read_excel(os.path.join(file_location, file_name))
+            elif format == "json":
+                data = pd.read_json(os.path.join(file_location, file_name))
+            elif format == "parquet":
+                data = pd.read_parquet(os.path.join(file_location, file_name))
+            elif format == "md":
+                data = self.read_markdown(os.path.join(file_location, file_name))
+            self.database.bulk_insert_passwords(data)
+            click.secho(
+                f"Passwords imported from {click.style(file_location, fg='blue')} as {click.style(file_name, fg='blue')}.",
+                fg="green",
+            )
+        except Exception as e:
+            self.handle_error(e, "Error importing passwords")
+
     def get_command(self) -> click.Group:
         """
         Create the CLI commands.
@@ -196,7 +261,7 @@ class CLIApp:
 
         @click.group()
         @click.version_option(
-            version=str(os.getenv("VERSION","0.3.1")),
+            version=str(os.getenv("VERSION", "0.3.1")),
             prog_name="PyPassWizard",
             message="%(prog)s %(version)s",
         )
@@ -302,6 +367,21 @@ class CLIApp:
             """Export passwords."""
             self.export_password(name, format, location)
 
+        @cli_group.command()
+        @click.option("--name", "-n", required=True, help="Name of the file.")
+        @click.option(
+            "--format",
+            "-f",
+            required=True,
+            help="Format of the file (e.g., csv, json).",
+        )
+        @click.option(
+            "--location", "-l", required=True, help="Location to pick the file."
+        )
+        def iimport(name: str, format: str, location: str):
+            """Import passwords."""
+            self.import_password(name, format, location)
+
         return cli_group
 
 
@@ -319,7 +399,7 @@ def main() -> None:
         handlers=[logging.FileHandler(log_file)],
     )
 
-    database_path = str(os.getenv("DATABASE_PATH","data/database.db"))
+    database_path = str(os.getenv("DATABASE_PATH", "data/database.db"))
     cli = CLIApp(database_path)
     cli_command = cli.get_command()
     cli_command()

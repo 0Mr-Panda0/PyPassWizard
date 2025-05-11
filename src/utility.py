@@ -73,3 +73,17 @@ class Database:
         if not df.empty:
             return df
         raise ValueError("No data found in the 'password' table.")
+
+    def bulk_insert_passwords(self, data: DataFrame) -> None:
+        if not isinstance(data, pd.DataFrame):
+            raise TypeError("Data must be a pandas DataFrame.")
+        if data.empty:
+            raise ValueError("DataFrame is empty.")
+        if not all(col in data.columns for col in ["name", "password"]):
+            raise ValueError("DataFrame must contain 'name' and 'password' columns.")
+
+        data = data.drop_duplicates(subset=["name"])
+        data.to_sql(
+            "password", sqlite3.connect(self.db_path), if_exists="append", index=False
+        )
+        logging.info("Bulk insert of passwords completed successfully.")
