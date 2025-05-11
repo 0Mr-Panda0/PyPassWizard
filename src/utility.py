@@ -50,11 +50,15 @@ class Database:
     def inserting_password(self, name: str, password: str) -> None:
         if not password:
             raise ValueError("Password cannot be empty.")
-        self.execute_query("INSERT INTO password(name, password) VALUES(?, ?)", (name, password))
+        self.execute_query(
+            "INSERT INTO password(name, password) VALUES(?, ?)", (name, password)
+        )
         logging.info(f"Password for name '{name}' inserted successfully.")
 
     def retrieve_password_with_name(self, name: str) -> str:
-        result = self.execute_query("SELECT password FROM password WHERE name = ?", (name,))
+        result = self.execute_query(
+            "SELECT password FROM password WHERE name = ?", (name,)
+        )
         if result:
             return result[0][0]
         raise ValueError(f"No password associated with name: {name}")

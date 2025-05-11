@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class CLIApp:
     """
     Command-line interface for managing passwords.
@@ -50,9 +51,18 @@ class CLIApp:
             message (str): The error message to display.
         """
         logging.error(f"{message}: {error}")
-        click.secho(f"{message}: {click.style(str(error), fg='red', bold=True)}", fg="blue")
+        click.secho(
+            f"{message}: {click.style(str(error), fg='red', bold=True)}", fg="blue"
+        )
 
-    def password_generate(self, length: int, include_letters: bool, include_special: bool, include_digit: bool, store: bool) -> None:
+    def password_generate(
+        self,
+        length: int,
+        include_letters: bool,
+        include_special: bool,
+        include_digit: bool,
+        store: bool,
+    ) -> None:
         """
         Generate a password and optionally store it in the database.
 
@@ -64,13 +74,21 @@ class CLIApp:
             store (bool): Whether to store the generated password in the database.
         """
         try:
-            password = self.password_generator.generate_password(length, include_letters, include_special, include_digit)
+            password = self.password_generator.generate_password(
+                length, include_letters, include_special, include_digit
+            )
             if store:
                 name = next(iter(self.names_generator))
                 self.database.inserting_password(name, password)
-                click.secho(f"Password stored with name: {click.style(name, fg='green', bold=True)}", fg="blue")
+                click.secho(
+                    f"Password stored with name: {click.style(name, fg='green', bold=True)}",
+                    fg="blue",
+                )
             else:
-                click.secho(f"Generated password: {click.style(password, fg='green', bold=True)}", fg="blue")
+                click.secho(
+                    f"Generated password: {click.style(password, fg='green', bold=True)}",
+                    fg="blue",
+                )
         except Exception as e:
             self.handle_error(e, "Error during password generation or storage")
 
@@ -83,7 +101,10 @@ class CLIApp:
         """
         try:
             password = self.database.retrieve_password_with_name(name)
-            click.secho(f"Retrieved Password: {click.style(password, fg='green', bold=True)}", fg="blue")
+            click.secho(
+                f"Retrieved Password: {click.style(password, fg='green', bold=True)}",
+                fg="blue",
+            )
         except Exception as e:
             self.handle_error(e, "Error retrieving the password")
 
@@ -114,7 +135,9 @@ class CLIApp:
         except Exception as e:
             self.handle_error(e, "Error deleting password")
 
-    def save_to_file(self, file_location: str, file_name: str, format: str, data: DataFrame) -> None:
+    def save_to_file(
+        self, file_location: str, file_name: str, format: str, data: DataFrame
+    ) -> None:
         """
         Save passwords to a file in the specified format.
 
@@ -135,7 +158,10 @@ class CLIApp:
             save_method = save_methods.get(format)
             if save_method:
                 save_method(f"{file_location}/{file_name}", index=False)
-                click.secho(f"Passwords saved in {click.style(file_location, fg='blue')} as {click.style(file_name, fg='blue')}.", fg="green")
+                click.secho(
+                    f"Passwords saved in {click.style(file_location, fg='blue')} as {click.style(file_name, fg='blue')}.",
+                    fg="green",
+                )
             else:
                 raise ValueError(f"Unsupported format: {format}")
         except Exception as e:
@@ -167,24 +193,78 @@ class CLIApp:
         Returns:
             click.Group: The CLI command group.
         """
+
         @click.group()
-        @click.version_option(version=str(os.getenv('VERSION')), prog_name="PyPassWizard", message="%(prog)s %(version)s")
+        @click.version_option(
+            version=str(os.getenv("VERSION","0.3.1")),
+            prog_name="PyPassWizard",
+            message="%(prog)s %(version)s",
+        )
         def cli_group():
             """Command line interface for managing passwords."""
             pass
 
         @cli_group.command()
-        @click.option("--length", "-l", type=int, default=12, show_default=True, help="Length of the password (8-128).")
-        @click.option("--include-letters", "-c", type=click.Choice(["Yes", "No"], case_sensitive=False), default="No", show_default=True, help="Include letters.")
-        @click.option("--include-special", "-i", type=click.Choice(["Yes", "No"], case_sensitive=False), default="No", show_default=True, help="Include special characters.")
-        @click.option("--include-digits", "-d", type=click.Choice(["Yes", "No"], case_sensitive=False), default="No", show_default=True, help="Include digits.")
-        @click.option("--store", "-s", type=click.Choice(["Yes", "No"], case_sensitive=False), default="No", show_default=True, help="Store the password in the database.")
-        def generate(length: int, include_letters: str, include_special: str, include_digits: str, store: str):
+        @click.option(
+            "--length",
+            "-l",
+            type=int,
+            default=12,
+            show_default=True,
+            help="Length of the password (8-128).",
+        )
+        @click.option(
+            "--include-letters",
+            "-c",
+            type=click.Choice(["Yes", "No"], case_sensitive=False),
+            default="No",
+            show_default=True,
+            help="Include letters.",
+        )
+        @click.option(
+            "--include-special",
+            "-i",
+            type=click.Choice(["Yes", "No"], case_sensitive=False),
+            default="No",
+            show_default=True,
+            help="Include special characters.",
+        )
+        @click.option(
+            "--include-digits",
+            "-d",
+            type=click.Choice(["Yes", "No"], case_sensitive=False),
+            default="No",
+            show_default=True,
+            help="Include digits.",
+        )
+        @click.option(
+            "--store",
+            "-s",
+            type=click.Choice(["Yes", "No"], case_sensitive=False),
+            default="No",
+            show_default=True,
+            help="Store the password in the database.",
+        )
+        def generate(
+            length: int,
+            include_letters: str,
+            include_special: str,
+            include_digits: str,
+            store: str,
+        ):
             """Generate a password."""
-            self.password_generate(length, self.to_bool(include_letters), self.to_bool(include_special), self.to_bool(include_digits), self.to_bool(store))
+            self.password_generate(
+                length,
+                self.to_bool(include_letters),
+                self.to_bool(include_special),
+                self.to_bool(include_digits),
+                self.to_bool(store),
+            )
 
         @cli_group.command()
-        @click.option("--name", "-n", required=True, help="Name associated with the password.")
+        @click.option(
+            "--name", "-n", required=True, help="Name associated with the password."
+        )
         def retrieve(name: str):
             """Retrieve a password."""
             self.retrieve_password(name)
@@ -197,19 +277,30 @@ class CLIApp:
             self.store_password(name, password)
 
         @cli_group.command()
-        @click.option("--name", "-n", required=True, help="Name associated with the password to delete.")
+        @click.option(
+            "--name",
+            "-n",
+            required=True,
+            help="Name associated with the password to delete.",
+        )
         def delete(name: str):
             """Delete a password."""
             self.delete_password(name)
 
         @cli_group.command()
         @click.option("--name", "-n", required=True, help="Name of the output file.")
-        @click.option("--format", "-f", required=True, help="Format of the output file (e.g., csv, json).")
-        @click.option("--location", "-l", required=True, help="Location to save the file.")
+        @click.option(
+            "--format",
+            "-f",
+            required=True,
+            help="Format of the output file (e.g., csv, json).",
+        )
+        @click.option(
+            "--location", "-l", required=True, help="Location to save the file."
+        )
         def export(name: str, format: str, location: str):
             """Export passwords."""
             self.export_password(name, format, location)
-
 
         return cli_group
 
@@ -228,7 +319,7 @@ def main() -> None:
         handlers=[logging.FileHandler(log_file)],
     )
 
-    database_path = str(os.getenv("DATABASE_PATH"))
+    database_path = str(os.getenv("DATABASE_PATH","data/database.db"))
     cli = CLIApp(database_path)
     cli_command = cli.get_command()
     cli_command()

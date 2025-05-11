@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class PasswordGenerator:
     """
     A class to generate secure passwords.
@@ -33,12 +34,22 @@ class PasswordGenerator:
         MAX_LENGTH = int(os.getenv("MAX_LENGTH", 128))
 
         if length < MIN_LENGTH:
-            raise ValueError(f"Password length should be at least {MIN_LENGTH} characters.")
+            raise ValueError(
+                f"Password length should be at least {MIN_LENGTH} characters."
+            )
         if length > MAX_LENGTH:
-            raise ValueError(f"Password length should not exceed {MAX_LENGTH} characters.")
+            raise ValueError(
+                f"Password length should not exceed {MAX_LENGTH} characters."
+            )
         return True
 
-    def generate_password(self,length: int,include_letters: bool = False,include_special: bool = False,include_digits: bool = False) -> str:
+    def generate_password(
+        self,
+        length: int,
+        include_letters: bool = False,
+        include_special: bool = False,
+        include_digits: bool = False,
+    ) -> str:
         """
         Generate a secure password.
 

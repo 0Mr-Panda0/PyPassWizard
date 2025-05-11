@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-class TestCLIApp:
 
+class TestCLIApp:
     @pytest.fixture
     def runner(self) -> CliRunner:
         """
@@ -34,7 +34,7 @@ class TestCLIApp:
         Returns:
             CLIApp: An instance of the CLI application.
         """
-        return CLIApp(str(os.getenv('TEST_DB_PATH')))
+        return CLIApp(str(os.getenv("TEST_DB_PATH")))
 
     def generate_and_store_password(
         self, runner: CliRunner, cli_app: CLIApp, name: str
@@ -120,7 +120,9 @@ class TestCLIApp:
         assert result.exit_code == 0
         assert "Generated password:" in result.output
 
-    def test_store_and_retrieve_password(self, runner: CliRunner, cli_app: CLIApp) -> None:
+    def test_store_and_retrieve_password(
+        self, runner: CliRunner, cli_app: CLIApp
+    ) -> None:
         """
         Test the storage and retrieval functionality of the CLI.
         """
@@ -198,17 +200,23 @@ class TestCLIApp:
 
         data = []
         for line in lines[1:]:
-            values = [val.strip() for val in re.split(r"([^|]+(?:\|[^|]+)*)", line)[1:-1]]
+            values = [
+                val.strip() for val in re.split(r"([^|]+(?:\|[^|]+)*)", line)[1:-1]
+            ]
             data.append(values)
 
         final_data = []
         for i in data:
-            final_data.append([i[0].split("| ")[0].strip(), i[0].split("| ")[1].strip() + "\n"])
+            final_data.append(
+                [i[0].split("| ")[0].strip(), i[0].split("| ")[1].strip() + "\n"]
+            )
 
         return pd.DataFrame(final_data, columns=headers)
 
     @pytest.mark.parametrize("format", ["csv", "xlsx", "json", "parquet", "md"])
-    def test_export_password(self, runner: CliRunner, cli_app: CLIApp, format: str) -> None:
+    def test_export_password(
+        self, runner: CliRunner, cli_app: CLIApp, format: str
+    ) -> None:
         """
         Test the export functionality of the CLI for various formats.
 
@@ -227,18 +235,15 @@ class TestCLIApp:
                 "--format",
                 format,
                 "--location",
-                str(os.getenv('TEST_EXPORT_DIR')),
+                str(os.getenv("TEST_EXPORT_DIR","passwords")),
             ],
         )
 
         file_name = f"output.{format}"
-        file_location = os.path.abspath(str(os.getenv('TEST_EXPORT_DIR')))
+        file_location = os.path.abspath(str(os.getenv("TEST_EXPORT_DIR","passwords")))
 
         assert result.exit_code == 0
-        assert (
-            result.output
-            == f"Passwords saved in {file_location} as {file_name}.\n"
-        )
+        assert result.output == f"Passwords saved in {file_location} as {file_name}.\n"
 
         # Validate exported data
         if format == "csv":
@@ -252,12 +257,14 @@ class TestCLIApp:
         elif format == "md":
             target_df = self.read_markdown(os.path.join(file_location, file_name))
 
-        conn = sqlite3.connect(str(os.getenv('TEST_DB_PATH')))
+        conn = sqlite3.connect(str(os.getenv("TEST_DB_PATH","data/test.db")))
         query = "SELECT name, password FROM password"
         source_df = pd.read_sql_query(query, conn)
         conn.close()
 
-        assert source_df.equals(target_df), "Exported data does not match database data."
+        assert source_df.equals(target_df), (
+            "Exported data does not match database data."
+        )
 
         # Clean up exported files
         self.cleanup_exported_files(file_location, file_name)
@@ -273,12 +280,8 @@ class TestCLIApp:
         )
 
         # Clean up the test database
-        if os.path.exists(str(os.getenv('TEST_DB_PATH'))):
-            os.remove(str(os.getenv('TEST_DB_PATH')))
+        if os.path.exists(str(os.getenv("TEST_DB_PATH","data/test.db"))):
+            os.remove(str(os.getenv("TEST_DB_PATH","data/test.db")))
         # Clean up the test export directory
-        if os.path.exists(str(os.getenv('TEST_EXPORT_DIR'))):
-            os.rmdir(str(os.getenv('TEST_EXPORT_DIR')))
-        # Clean database path
-        if os.path.exists(str(os.getenv('TEST_DB_PATH')).split("/")[0]):
-            os.rmdir(str(os.getenv('TEST_DB_PATH')).split("/")[0])
-
+        if os.path.exists(str(os.getenv("TEST_EXPORT_DIR","passwords"))):
+            os.rmdir(str(os.getenv("TEST_EXPORT_DIR","passwords")))

@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class TestDatabase:
     """
     Test cases for the Database class.
@@ -24,7 +25,7 @@ class TestDatabase:
         removes the database file after each test.
         """
         # Setup
-        self.db_instance = Database(str(os.getenv('TEST_DB_PATH')))
+        self.db_instance = Database(str(os.getenv("TEST_DB_PATH","data/test.db")))
         yield
         # Teardown
         if os.path.exists(self.db_instance.db_path):
@@ -67,9 +68,9 @@ class TestDatabase:
         """
         Test if the password table is created in the database.
         """
-        query = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{str(os.getenv('TEST_TABLE_NAME'))}';"
+        query = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{str(os.getenv('TEST_TABLE_NAME','password'))}';"
         result = self.execute_query(query)
-        assert result, f"Table '{str(os.getenv('TEST_TABLE_NAME'))}' should exist."
+        assert result, f"Table '{str(os.getenv('TEST_TABLE_NAME','password'))}' should exist."
 
     def test_insert_password(self, pass_gen: PasswordGenerator) -> None:
         """
@@ -80,12 +81,15 @@ class TestDatabase:
 
         self.db_instance.inserting_password(test_name, test_password)
         result = self.execute_query(
-            f"SELECT password FROM {str(os.getenv('TEST_TABLE_NAME'))} WHERE name = ?", (test_name,)
+            f"SELECT password FROM {str(os.getenv('TEST_TABLE_NAME','password'))} WHERE name = ?",
+            (test_name,),
         )
         self.db_instance.delete_password_with_name(test_name)
 
         assert result, "Password should be inserted into the database."
-        assert result[0][0] == test_password, "Inserted password should match the test password."
+        assert result[0][0] == test_password, (
+            "Inserted password should match the test password."
+        )
 
     def test_retrieve_non_existent_password(self) -> None:
         """
