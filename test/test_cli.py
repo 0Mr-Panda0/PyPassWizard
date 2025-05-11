@@ -5,6 +5,7 @@ This module contains test cases for the CLI application.
 import pytest
 import os
 import pandas as pd  # type: ignore
+import funkybob  # type: ignore
 import sqlite3
 import re
 from click.testing import CliRunner
@@ -34,7 +35,17 @@ class TestCLIApp:
         Returns:
             CLIApp: An instance of the CLI application.
         """
-        return CLIApp(str(os.getenv("TEST_DB_PATH")))
+        return CLIApp(str(os.getenv("TEST_DB_PATH", "data/test.db")))
+    
+    @pytest.fixture
+    def name_gen(self) -> funkybob.RandomNameGenerator:
+        """
+        Fixture for the CLI application.
+
+        Returns:
+            CLIApp: An instance of the CLI application.
+        """
+        return funkybob.RandomNameGenerator()
 
     def generate_and_store_password(
         self, runner: CliRunner, cli_app: CLIApp, name: str
@@ -121,12 +132,12 @@ class TestCLIApp:
         assert "Generated password:" in result.output
 
     def test_store_and_retrieve_password(
-        self, runner: CliRunner, cli_app: CLIApp
+        self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob.RandomNameGenerator
     ) -> None:
         """
         Test the storage and retrieval functionality of the CLI.
         """
-        name = "test_name"
+        name = next(iter(name_gen))
         password = self.generate_and_store_password(runner, cli_app, name)
 
         result = runner.invoke(
@@ -150,11 +161,11 @@ class TestCLIApp:
         assert result.exit_code == 0
         assert f"Retrieved Password: {password}\n" in result.output
 
-    def test_delete_password(self, runner: CliRunner, cli_app: CLIApp) -> None:
+    def test_delete_password(self, runner: CliRunner, cli_app: CLIApp, name_gen: funkybob.RandomNameGenerator) -> None:
         """
         Test the delete functionality of the CLI.
         """
-        name = "test_name"
+        name = next(iter(name_gen))
         self.generate_and_store_password(runner, cli_app, name)
 
         result = runner.invoke(
@@ -215,7 +226,7 @@ class TestCLIApp:
 
     @pytest.mark.parametrize("format", ["csv", "xlsx", "json", "parquet", "md"])
     def test_export_password(
-        self, runner: CliRunner, cli_app: CLIApp, format: str
+        self, runner: CliRunner, cli_app: CLIApp, format: str, name_gen: funkybob.RandomNameGenerator
     ) -> None:
         """
         Test the export functionality of the CLI for various formats.
@@ -223,7 +234,7 @@ class TestCLIApp:
         Args:
             format (str): The format to export the passwords (e.g., csv, xlsx, json, parquet).
         """
-        name = "test_name"
+        name = next(iter(name_gen))
         self.generate_and_store_password(runner, cli_app, name)
 
         result = runner.invoke(

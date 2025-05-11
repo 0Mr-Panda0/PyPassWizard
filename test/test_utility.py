@@ -5,6 +5,7 @@ Test cases for the Database class in the utility module.
 import os
 import sqlite3
 import pytest
+import funkybob  # type: ignore
 from src.utility import Database
 from src.core import PasswordGenerator
 from dotenv import load_dotenv
@@ -40,6 +41,16 @@ class TestDatabase:
             PasswordGenerator: PasswordGenerator class.
         """
         return PasswordGenerator()
+    
+    @pytest.fixture
+    def name_gen(self) -> funkybob:
+        """
+        Fixture for the password generation.
+
+        Returns:
+            PasswordGenerator: PasswordGenerator class.
+        """
+        return funkybob.RandomNameGenerator()
 
     def execute_query(self, query: str, params: tuple = ()) -> list:
         """
@@ -72,12 +83,12 @@ class TestDatabase:
         result = self.execute_query(query)
         assert result, f"Table '{str(os.getenv('TEST_TABLE_NAME','password'))}' should exist."
 
-    def test_insert_password(self, pass_gen: PasswordGenerator) -> None:
+    def test_insert_password(self, pass_gen: PasswordGenerator, name_gen: funkybob.RandomNameGenerator) -> None:
         """
         Test if a password can be inserted into the database.
         """
         test_password = pass_gen.generate_password(12, True, True, True)
-        test_name = "test_insert_name"
+        test_name = next(iter(name_gen))
 
         self.db_instance.inserting_password(test_name, test_password)
         result = self.execute_query(
@@ -98,12 +109,12 @@ class TestDatabase:
         with pytest.raises(ValueError, match="No password associated with name:"):
             self.db_instance.retrieve_password_with_name("non_existent_name")
 
-    def test_delete_password(self, pass_gen: PasswordGenerator) -> None:
+    def test_delete_password(self, pass_gen: PasswordGenerator, name_gen: funkybob.RandomNameGenerator) -> None:
         """
         Test if a password can be deleted from the database.
         """
         test_password = pass_gen.generate_password(12, True, True, True)
-        test_name = "test_delete_name"
+        test_name = next(iter(name_gen))
 
         self.db_instance.inserting_password(test_name, test_password)
         self.db_instance.delete_password_with_name(test_name)
