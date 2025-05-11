@@ -98,6 +98,16 @@ pypasswizard export --name "output" --format xlsx --location passwords
 
 Note: Current supported formats csv, xlsx, parquet, json, md
 
+### Import Passwords
+
+Import passwords:
+
+```bash
+pypasswizard import --name "output" --format xlsx --location passwords
+```
+
+Note: Current supported formats csv, xlsx, parquet, json, md
+
 ### View Help
 
 View all available commands and options:
@@ -143,3 +153,5 @@ For any questions or suggestions, please open an issue or contact me at [Karan B
 Thank you for using PyPassWizard!
 
 [![CI Pipeline](https://github.com/0Mr-Panda0/PyPassWizard/actions/workflows/main.yml/badge.svg)](https://github.com/0Mr-Panda0/PyPassWizard/actions/workflows/main.yml)
+
+[![Upload Python Package to PyPI when a Release is Created](https://github.com/0Mr-Panda0/PyPassWizard/actions/workflows/publish.yml/badge.svg)](https://github.com/0Mr-Panda0/PyPassWizard/actions/workflows/publish.yml)

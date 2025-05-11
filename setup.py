@@ -6,7 +6,7 @@ load_dotenv()
 
 setup(
     name="PyPassWizard",
-    version="0.3.2",
+    version="0.3.3",
     author="0Mr-Panda0",
     author_email="karan.behera366@gmail.com",
     description="A CLI application for managing passwords securely.",
